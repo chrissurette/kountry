@@ -1,11 +1,20 @@
-# Netlify deploys this Next.js app zero-config via its built-in OpenNext
-# adapter (auto-detected — no [[plugins]] block needed here; pinning it is
-# actively discouraged by Netlify's own docs, since auto-updates track
-# Next.js compatibility). This file only needs to point at the one thing
-# Netlify can't infer on its own: the scheduled function that replaces
-# Vercel Cron (see netlify/functions/promote-schedules.mts).
+# Netlify deploys this Next.js app via its Next.js Runtime. Framework
+# auto-detection is normally zero-config (no [[plugins]] block needed) — but
+# on this site, auto-detection never activated (Build settings kept showing
+# "Runtime: Not set" even after a fully successful `npm run build`, and the
+# site 404'd on every path since nothing wired the build output into
+# servable functions/routes). The explicit [[plugins]] block below forces
+# the runtime on regardless of auto-detection, per Netlify's own docs for
+# this exact symptom — it requires the matching @netlify/plugin-nextjs
+# devDependency in package.json (added unpinned, so Netlify keeps it
+# current the same way auto-detection would have). This file also points at
+# the one thing Netlify can't infer on its own: the scheduled function that
+# replaces Vercel Cron (see netlify/functions/promote-schedules.mts).
 [build]
   command = "npm run build"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 # Next.js 16 requires Node >=20.9 (node_modules/next's own engines field).
 # Pinned explicitly rather than relying on the account/site default, since
