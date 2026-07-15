@@ -1,17 +1,24 @@
 # Netlify deploys this Next.js app via its Next.js Runtime. Framework
-# auto-detection is normally zero-config (no [[plugins]] block needed) — but
-# on this site, auto-detection never activated (Build settings kept showing
-# "Runtime: Not set" even after a fully successful `npm run build`, and the
-# site 404'd on every path since nothing wired the build output into
-# servable functions/routes). The explicit [[plugins]] block below forces
-# the runtime on regardless of auto-detection, per Netlify's own docs for
-# this exact symptom — it requires the matching @netlify/plugin-nextjs
-# devDependency in package.json (added unpinned, so Netlify keeps it
-# current the same way auto-detection would have). This file also points at
+# auto-detection never activated on this specific site (Build settings kept
+# showing "Runtime: Not set" even after a fully successful `npm run build`,
+# and the site 404'd on every path since nothing wired the build output into
+# servable functions/routes). Two things were needed to fix it, both
+# confirmed against real failed deploy logs on this project, not guessed:
+# (1) the explicit [[plugins]] block below, forcing the runtime on
+# regardless of auto-detection — requires the matching @netlify/plugin-nextjs
+# devDependency in package.json (added unpinned, so Netlify keeps it current
+# the same way auto-detection would have). (2) `publish = ".next"` — with no
+# publish directory set (the zero-config-recommended default), it resolved
+# to the base directory itself (`publish: /opt/build/repo` in the resolved
+# config), which the plugin's own onBuild guard rejects with "Your publish
+# directory cannot be the same as the base directory of your site." Setting
+# it explicitly gives the plugin a valid starting point before it takes over
+# and transforms the actual served output itself. This file also points at
 # the one thing Netlify can't infer on its own: the scheduled function that
 # replaces Vercel Cron (see netlify/functions/promote-schedules.mts).
 [build]
   command = "npm run build"
+  publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
