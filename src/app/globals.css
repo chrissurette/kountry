@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* Marketing-site palette (warm country-kitchen fallbacks). The (marketing)
+     layout overrides these per request from the restaurant brand profile via
+     siteStyleVars(), so nothing here is restaurant-specific — see
+     src/lib/site/theme.ts. */
+  --site-primary: #7c2d12;
+  --site-accent: #b45309;
+  --site-bg: #fffaf3;
+  --site-surface: #ffffff;
+  --site-text: #292524;
+  --site-muted: #6f6862;
+  --site-border: #ece0d1;
+  --site-font-heading: Georgia, "Times New Roman", serif;
+  --site-font-body: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Registering these makes bg-site-*, text-site-*, border-site-*,
+     font-site-* utilities resolve to the runtime-overridable variables. */
+  --color-site-primary: var(--site-primary);
+  --color-site-accent: var(--site-accent);
+  --color-site-bg: var(--site-bg);
+  --color-site-surface: var(--site-surface);
+  --color-site-text: var(--site-text);
+  --color-site-muted: var(--site-muted);
+  --color-site-border: var(--site-border);
+  --font-site-heading: var(--site-font-heading);
+  --font-site-body: var(--site-font-body);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+html {
+  /* Reserves the scrollbar's width on every page, whether or not that page's
+     content is tall enough to need one — otherwise navigating between a
+     scrolling page and a short one shifts all centered/fixed content
+     sideways by the scrollbar's width (a common, easy-to-miss cause of "the
+     header moves between pages"). Widely supported (Chromium/Firefox); Safari
+     without support just falls back to its normal (harmless) behavior. */
+  scrollbar-gutter: stable;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Page-enter transition (src/app/(marketing)/template.tsx,
+   src/app/admin/template.tsx). Next.js remounts `template.tsx` on every
+   navigation while `layout.tsx` (nav/footer) persists untouched, so this
+   fires on the content only — the nav never re-renders or flashes. Pure CSS,
+   no JS: the animation replays automatically because the element is a fresh
+   DOM node each navigation. Opacity + transform only (compositor-friendly,
+   no layout thrash) and short enough to feel instant rather than delay the
+   page. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-page-in {
+  animation: page-in 220ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in {
+    animation: none;
+  }
+}
+
+/* Homepage reviews marquee (src/app/(marketing)/reviews-carousel.tsx). A CSS
+   transform animation — compositor-driven and sub-pixel — rather than a
+   JS-driven scrollLeft, so the drift stays smooth even under main-thread load
+   and never steps by whole pixels at slow speeds. JS only measures the exact
+   one-set shift/duration (--marquee-shift/--marquee-duration) and toggles
+   play-state on hover/touch. Under reduced-motion it becomes a plain
+   manual-scroll row. */
+.review-marquee-viewport {
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.review-marquee-viewport::-webkit-scrollbar {
+  display: none;
+}
+.review-marquee-track {
+  animation: review-marquee var(--marquee-duration, 60s) linear infinite;
+  will-change: transform;
+}
+@keyframes review-marquee {
+  to {
+    transform: translateX(calc(-1 * var(--marquee-shift, 50%)));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .review-marquee-viewport {
+    overflow-x: auto;
+  }
+  .review-marquee-track {
+    animation: none;
+  }
+}
+
+/* Hides the scrollbar on an intentionally-scrollable strip (menu page's
+   category jump-nav, src/app/(marketing)/menu/page.tsx) while keeping native
+   touch/wheel/keyboard scrolling — the visual affordance is the next chip
+   peeking in from the edge, not a scrollbar track. Same cross-browser
+   technique as .review-marquee-viewport above. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fades both edges of that same scrollable strip so a chip that's only
+   partially scrolled into view trails off instead of being hard-clipped by
+   the pill's rounded border (which otherwise reads as a text-overflow bug,
+   not an intentional "scroll for more" affordance). The fade width sits
+   inside the pill's own edge padding, so on a desktop-width viewport where
+   nothing actually overflows this is invisible — it only shows once a chip's
+   text reaches that zone during a scroll. */
+.scroll-fade-x {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+  mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+}

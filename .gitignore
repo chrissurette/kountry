@@ -1,0 +1,54 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+Thumbs.db
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+# ...but DO commit the example template — it documents the required vars and
+# contains no secrets. New checkouts copy it to .env.local.
+!.env.example
+
+# vercel
+.vercel
+
+# netlify (local CLI state / `netlify dev`)
+.netlify
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# serwist-generated service worker (built from src/app/sw.ts)
+/public/sw.js
+/public/sw.js.map
+/public/swe-worker-*.js
+/public/swe-worker-*.js.map

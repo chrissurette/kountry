@@ -1,0 +1,818 @@
+import type { Locale } from "./locale";
+
+/**
+ * Short, reusable UI strings (nav, buttons, labels) shared across the
+ * marketing site. Long-form owner-authored prose (hero, about, catering,
+ * reviews) lives in src/lib/site/content.ts instead — this file is the
+ * "site chrome" half of the translation, that one is the "copy" half.
+ */
+export interface Dictionary {
+  nav: {
+    home: string;
+    menu: string;
+    order: string;
+    about: string;
+    visit: string;
+    gallery: string;
+    catering: string;
+    callToOrder: string;
+    openMenu: string;
+    closeMenu: string;
+    privacy: string;
+    terms: string;
+    staffSignIn: string;
+  };
+  common: {
+    getDirections: string;
+    viewTheMenu: string;
+    callToOrderWith: (phone: string) => string;
+    hoursAndContact: string;
+    comeSeeUs: string;
+    hours: string;
+    closed: string;
+    openNow: string;
+    closedNow: string;
+    close: string;
+    days: Record<string, string>;
+  };
+  home: {
+    viewTheMenu: string;
+    comeSeeUs: string;
+    getDirectionsArrow: string;
+  };
+  menu: {
+    title: string;
+    todaysSpecials: string;
+    breakfast: string;
+    lunchDinner: string;
+    beverages: string;
+    menuBeingPrepared: string;
+    checkBackSoon: string;
+    or: string;
+    giveUsACall: string;
+    cateringCta: string;
+  };
+  specialsPreview: {
+    todaysSpecials: string;
+    freshDaily: string;
+    viewTodaysSpecials: string;
+    viewFullMenu: string;
+    seeFullMenu: string;
+  };
+  specialImage: {
+    tapToEnlarge: string;
+  };
+  about: {
+    ourStory: string;
+    seeTheMenu: string;
+    planAVisit: string;
+    whatGuestsSay: string;
+  };
+  visit: {
+    title: string;
+    findUs: string;
+    addressComingSoon: string;
+    hoursComingSoon: string;
+  };
+  gallery: {
+    title: string;
+    lead: string;
+    leadEmpty: string;
+    hungrySeeMenu: string;
+    photoComingSoon: string;
+  };
+  catering: {
+    title: string;
+    whatWeOffer: string;
+    letsPlanIt: string;
+    reachOut: string;
+    callPhone: (phone: string) => string;
+    emailUs: string;
+  };
+  order: {
+    onlineOrdering: string;
+    comingSoon: string;
+    body: string;
+    browseTheMenu: string;
+    orderInPerson: (address: string) => string;
+  };
+  reviews: {
+    eyebrow: string;
+    lovedSince: (year: string) => string;
+    reviewsOnGoogle: string;
+    customerReviewsLabel: string;
+  };
+  admin: {
+    nav: {
+      newDailySpecial: string;
+      mainMenu: string;
+      history: string;
+      library: string;
+      sitePhotos: string;
+      settings: string;
+      signOut: string;
+      viewPublicSite: string;
+    };
+    login: {
+      title: string;
+      tagline: string;
+      usernameOrEmail: string;
+      password: string;
+      signIn: string;
+      signingIn: string;
+      errorMissingFields: string;
+      errorGeneric: string;
+    };
+    capture: {
+      title: string;
+      description: string;
+      takeOrChoosePhoto: string;
+      choosePhotoDifferent: string;
+      readThisMenu: string;
+      preparingPhoto: string;
+      uploading: string;
+      readingMenu: string;
+      resumeTitle: string;
+      resumeHasImage: string;
+      resumeNoImage: string;
+      resume: string;
+      startNew: string;
+      errorUploadPrep: string;
+      errorGeneric: string;
+    };
+    review: {
+      heading: string;
+      description: string;
+      style: string;
+      translateToSpanish: string;
+      reTranslateToSpanish: string;
+      translating: string;
+      showSpanish: string;
+      spanishSaved: string;
+      translatedMessage: string;
+      errorTranslate: string;
+      errorRender: string;
+      errorPublish: string;
+      errorSchedule: string;
+      saveAndRender: string;
+      rendering: string;
+      renderedUpToDate: string;
+      englishAndSpanish: string;
+      editTheMenu: string;
+      uncertainWarning: string;
+      maybeSuggestion: (value: string) => string;
+      untitled: string;
+      notSet: string;
+      set: string;
+      itemCount: (n: number) => string;
+      published: string;
+      viewOnSite: string;
+      noMenuData: string;
+      generatedImageAlt: string;
+      livePreviewAlt: string;
+      livePreviewAltEs: string;
+      header: {
+        sectionTitle: string;
+        title: string;
+        titleEs: string;
+        date: string;
+        dateEs: string;
+        subtitleNote: string;
+        subtitleNoteEs: string;
+        letterheadNote: string;
+      };
+      entrees: {
+        title: string;
+        itemName: string;
+        price: string;
+        description: string;
+        addEntree: string;
+        lowConfidence: string;
+        nameEs: string;
+        descriptionEs: string;
+      };
+      featured: {
+        title: string;
+        name: string;
+        description: string;
+        price: string;
+        nameEs: string;
+        descriptionEs: string;
+        addFeatured: string;
+      };
+      soup: {
+        title: string;
+        name: string;
+        nameEs: string;
+        tierLabel: string;
+        tierPrice: string;
+        tierLabelEs: string;
+        addTier: string;
+        addSoup: string;
+      };
+      combos: {
+        title: string;
+        name: string;
+        price: string;
+        addCombo: string;
+        nameEs: string;
+      };
+      veggie: {
+        title: string;
+        description: string;
+        price: string;
+        descriptionEs: string;
+      };
+      desserts: {
+        title: string;
+        sectionLabel: string;
+        sectionLabelEs: string;
+        name: string;
+        price: string;
+        addDessert: string;
+        nameEs: string;
+      };
+      sides: {
+        title: string;
+        addSide: string;
+        spanishPlaceholder: string;
+      };
+      additional: {
+        title: string;
+        summaryEmpty: string;
+        help: string;
+        sectionTitle: string;
+        sectionTitleEs: string;
+        note: string;
+        noteEs: string;
+        itemName: string;
+        itemNameEs: string;
+        itemPrice: string;
+        itemDescription: string;
+        itemDescriptionEs: string;
+        addItem: string;
+        addSection: string;
+        removeSection: string;
+      };
+      remove: string;
+      publishBar: {
+        scheduledToGoLive: (date: string) => string;
+        cancelSchedule: string;
+        publishNow: string;
+        publishing: string;
+        schedule: string;
+        saveBeforePublish: string;
+      };
+    };
+  };
+}
+
+const dictionary: Record<Locale, Dictionary> = {
+  en: {
+    nav: {
+      home: "Home",
+      menu: "Menu",
+      order: "Order",
+      about: "About",
+      visit: "Visit",
+      gallery: "Gallery",
+      catering: "Catering",
+      callToOrder: "Call to Order",
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
+      privacy: "Privacy",
+      terms: "Terms",
+      staffSignIn: "Staff sign-in",
+    },
+    common: {
+      getDirections: "Get Directions",
+      viewTheMenu: "View the Menu",
+      callToOrderWith: (phone: string) => `Call to Order — ${phone}`,
+      hoursAndContact: "Hours & contact →",
+      comeSeeUs: "Come see us",
+      hours: "Hours",
+      closed: "Closed",
+      openNow: "Open now",
+      closedNow: "Closed now",
+      close: "Close",
+      days: {
+        mon: "Monday",
+        tue: "Tuesday",
+        wed: "Wednesday",
+        thu: "Thursday",
+        fri: "Friday",
+        sat: "Saturday",
+        sun: "Sunday",
+      } as Record<string, string>,
+    },
+    home: {
+      viewTheMenu: "View the Menu",
+      comeSeeUs: "Come see us",
+      getDirectionsArrow: "Get directions →",
+    },
+    menu: {
+      title: "Menu",
+      todaysSpecials: "Today's Specials",
+      breakfast: "Breakfast",
+      lunchDinner: "Lunch & Dinner",
+      beverages: "Beverages",
+      menuBeingPrepared: "Our menu is being prepared.",
+      checkBackSoon: "Please check back soon",
+      or: "or",
+      giveUsACall: "give us a call",
+      cateringCta: "Hosting a group? See our catering →",
+    },
+    specialsPreview: {
+      todaysSpecials: "Today's Specials",
+      freshDaily: "Fresh specials posted daily — check back soon.",
+      viewTodaysSpecials: "View Today's Specials",
+      viewFullMenu: "View Full Menu",
+      seeFullMenu: "See the full menu →",
+    },
+    specialImage: {
+      tapToEnlarge: "Tap to enlarge",
+    },
+    about: {
+      ourStory: "Our Story",
+      seeTheMenu: "See the Menu",
+      planAVisit: "Plan a Visit",
+      whatGuestsSay: "What our guests say",
+    },
+    visit: {
+      title: "Visit Us",
+      findUs: "Find us",
+      addressComingSoon: "Address coming soon.",
+      hoursComingSoon: "Hours coming soon — please call ahead.",
+    },
+    gallery: {
+      title: "Gallery",
+      lead: "A look at the food and the room.",
+      leadEmpty: "A look at the food and the room. Photos are on their way.",
+      hungrySeeMenu: "Hungry? See the menu →",
+      photoComingSoon: "Photo coming soon",
+    },
+    catering: {
+      title: "Catering",
+      whatWeOffer: "What we offer",
+      letsPlanIt: "Let's plan it",
+      reachOut: "Reach out with your date and headcount and we'll take it from there.",
+      callPhone: (phone: string) => `Call ${phone}`,
+      emailUs: "Email us",
+    },
+    order: {
+      onlineOrdering: "Online Ordering",
+      comingSoon: "Coming soon",
+      body: "We're building online ordering so you can get your favorites without the wait. It's not quite ready yet — but in the meantime, ordering is one call (or a quick visit) away.",
+      browseTheMenu: "Browse the Menu",
+      orderInPerson: (address: string) => `Prefer to order in person? We're at ${address}.`,
+    },
+    reviews: {
+      eyebrow: "Reviews",
+      lovedSince: (year: string) => `Loved in Immokalee since ${year}`,
+      reviewsOnGoogle: "reviews on Google",
+      customerReviewsLabel: "Customer reviews",
+    },
+    admin: {
+      nav: {
+        newDailySpecial: "New Daily Special",
+        mainMenu: "Main Menu",
+        history: "History",
+        library: "Library",
+        sitePhotos: "Site Photos",
+        settings: "Settings",
+        signOut: "Sign out",
+        viewPublicSite: "View public site",
+      },
+      login: {
+        title: "MyMenuAgent",
+        tagline: "Sign in to manage your restaurant's site.",
+        usernameOrEmail: "Username or email",
+        password: "Password",
+        signIn: "Sign in",
+        signingIn: "Signing in…",
+        errorMissingFields: "Enter your username or email and your password.",
+        errorGeneric: "That login didn't match. Check your username/email and password.",
+      },
+      capture: {
+        title: "Photograph today's specials",
+        description:
+          "Take or choose a photo of your specials board. We'll read it into an editable menu you can check and correct — then publish a clean, typeset version.",
+        takeOrChoosePhoto: "Take or choose a photo",
+        choosePhotoDifferent: "Choose a different photo",
+        readThisMenu: "Read this menu",
+        preparingPhoto: "Preparing photo…",
+        uploading: "Uploading…",
+        readingMenu: "Reading your menu (this can take a moment)…",
+        resumeTitle: "You have a special in progress.",
+        resumeHasImage: "Pick up where you left off — your work is saved.",
+        resumeNoImage: "You read a menu but haven't finished it yet. Pick up where you left off.",
+        resume: "Resume",
+        startNew: "Start a new one",
+        errorUploadPrep: "Could not prepare the upload.",
+        errorGeneric: "Something went wrong.",
+      },
+      review: {
+        heading: "Review & Publish",
+        description:
+          "We read your photo into the menu below. Fix anything that looks off — especially highlighted items — then render and publish a clean, typeset version.",
+        style: "Style",
+        translateToSpanish: "Translate to Spanish",
+        reTranslateToSpanish: "Re-translate to Spanish",
+        translating: "Translating…",
+        showSpanish: "Show Spanish",
+        spanishSaved: "✓ Spanish version saved",
+        translatedMessage: "Translated — review below, then Save & render.",
+        errorTranslate: "Translation failed.",
+        errorRender: "Failed to render.",
+        errorPublish: "Failed to publish.",
+        errorSchedule: "Failed to schedule.",
+        saveAndRender: "Save & render polished menu",
+        rendering: "Rendering…",
+        renderedUpToDate: "Rendered ✓ — up to date",
+        englishAndSpanish: " (English + Spanish)",
+        editTheMenu: "Edit the menu",
+        uncertainWarning: "Please double-check these — the photo was hard to read here:",
+        maybeSuggestion: (value: string) => ` (maybe "${value}")`,
+        untitled: "Untitled",
+        notSet: "Not set",
+        set: "Set",
+        itemCount: (n: number) => `${n} item${n === 1 ? "" : "s"}`,
+        published: "Published — your special is live.",
+        viewOnSite: "View it on your site →",
+        noMenuData: "This draft has no menu data to edit.",
+        generatedImageAlt: "Generated special menu",
+        livePreviewAlt: "Live preview of the rendered menu",
+        livePreviewAltEs: "Live preview of the Spanish rendered menu",
+        header: {
+          sectionTitle: "Header",
+          title: "Title",
+          titleEs: "Title (Spanish)",
+          date: "Date",
+          dateEs: "Date (Spanish)",
+          subtitleNote: "Subtitle / note",
+          subtitleNoteEs: "Subtitle / note (Spanish)",
+          letterheadNote:
+            "Restaurant name, address, and phone are filled in automatically from your profile (Settings) — same on English and Spanish versions.",
+        },
+        entrees: {
+          title: "Entrées",
+          itemName: "Item name",
+          price: "Price",
+          description: "Description (optional)",
+          addEntree: "+ Add entrée",
+          lowConfidence: "Low confidence — verify this reading.",
+          nameEs: "Dish name (Spanish)",
+          descriptionEs: "Description (Spanish, optional)",
+        },
+        featured: {
+          title: "Featured items",
+          name: "Name",
+          description: "Description",
+          price: "Price",
+          nameEs: "Name (Spanish)",
+          descriptionEs: "Description (Spanish)",
+          addFeatured: "+ Add featured item",
+        },
+        soup: {
+          title: "Soups",
+          name: "Soup name",
+          nameEs: "Soup name (Spanish)",
+          tierLabel: 'Size label (e.g. Cup, Small) — blank for one price',
+          tierPrice: "Price",
+          tierLabelEs: "Size label (Spanish)",
+          addTier: "+ Add price / size",
+          addSoup: "+ Add soup",
+        },
+        combos: {
+          title: "Combos",
+          name: "Name",
+          price: "Price",
+          addCombo: "+ Add combo",
+          nameEs: "Name (Spanish)",
+        },
+        veggie: {
+          title: "Veggie plate",
+          description: "Description",
+          price: "Price",
+          descriptionEs: "Description (Spanish)",
+        },
+        desserts: {
+          title: "Desserts",
+          sectionLabel: 'Section title from the board (e.g. "Slice of Cake") — leave blank for "Desserts"',
+          sectionLabelEs: "Section title (Spanish)",
+          name: "Name",
+          price: "Price",
+          addDessert: "+ Add dessert",
+          nameEs: "Name (Spanish)",
+        },
+        sides: {
+          title: "Sides",
+          addSide: "+ Add side",
+          spanishPlaceholder: "Spanish",
+        },
+        additional: {
+          title: "Other sections",
+          summaryEmpty: "None",
+          help: "Anything the board has that doesn't fit the sections above — Breakfast, Appetizers, Kids Menu, Drinks, etc. The AI puts unrecognized sections here automatically; you can also add your own.",
+          sectionTitle: "Section title (e.g. Breakfast)",
+          sectionTitleEs: "Section title (Spanish)",
+          note: "Section note, optional (e.g. All served with cornbread)",
+          noteEs: "Section note (Spanish)",
+          itemName: "Item name",
+          itemNameEs: "Item name (Spanish)",
+          itemPrice: "Price",
+          itemDescription: "Description (optional)",
+          itemDescriptionEs: "Description (Spanish)",
+          addItem: "+ Add item",
+          addSection: "+ Add section",
+          removeSection: "Remove section",
+        },
+        remove: "Remove",
+        publishBar: {
+          scheduledToGoLive: (date: string) => `Scheduled to go live ${date}`,
+          cancelSchedule: "Cancel schedule",
+          publishNow: "Approve & Publish Now",
+          publishing: "Publishing…",
+          schedule: "Schedule",
+          saveBeforePublish: "Save & render your changes before publishing.",
+        },
+      },
+    },
+  },
+  es: {
+    nav: {
+      home: "Inicio",
+      menu: "Menú",
+      order: "Pedidos",
+      about: "Nosotros",
+      visit: "Visítanos",
+      gallery: "Galería",
+      catering: "Catering",
+      callToOrder: "Llame para ordenar",
+      openMenu: "Abrir menú",
+      closeMenu: "Cerrar menú",
+      privacy: "Privacidad",
+      terms: "Términos",
+      staffSignIn: "Acceso del personal",
+    },
+    common: {
+      getDirections: "Cómo llegar",
+      viewTheMenu: "Ver el menú",
+      callToOrderWith: (phone: string) => `Llame para ordenar — ${phone}`,
+      hoursAndContact: "Horario y contacto →",
+      comeSeeUs: "Ven a vernos",
+      hours: "Horario",
+      closed: "Cerrado",
+      openNow: "Abierto ahora",
+      closedNow: "Cerrado ahora",
+      close: "Cerrar",
+      days: {
+        mon: "Lunes",
+        tue: "Martes",
+        wed: "Miércoles",
+        thu: "Jueves",
+        fri: "Viernes",
+        sat: "Sábado",
+        sun: "Domingo",
+      } as Record<string, string>,
+    },
+    home: {
+      viewTheMenu: "Ver el menú",
+      comeSeeUs: "Ven a vernos",
+      getDirectionsArrow: "Cómo llegar →",
+    },
+    menu: {
+      title: "Menú",
+      todaysSpecials: "Especiales del Día",
+      breakfast: "Desayuno",
+      lunchDinner: "Almuerzo y Cena",
+      beverages: "Bebidas",
+      menuBeingPrepared: "Estamos preparando nuestro menú.",
+      checkBackSoon: "Vuelve pronto",
+      or: "o",
+      giveUsACall: "llámanos",
+      cateringCta: "¿Organizas un evento? Mira nuestro catering →",
+    },
+    specialsPreview: {
+      todaysSpecials: "Especiales del Día",
+      freshDaily: "Especiales frescos cada día — vuelve pronto.",
+      viewTodaysSpecials: "Ver los Especiales de Hoy",
+      viewFullMenu: "Ver el Menú Completo",
+      seeFullMenu: "Ver el menú completo →",
+    },
+    specialImage: {
+      tapToEnlarge: "Toca para ampliar",
+    },
+    about: {
+      ourStory: "Nuestra Historia",
+      seeTheMenu: "Ver el Menú",
+      planAVisit: "Planea tu Visita",
+      whatGuestsSay: "Lo que dicen nuestros clientes",
+    },
+    visit: {
+      title: "Visítanos",
+      findUs: "Encuéntranos",
+      addressComingSoon: "Dirección próximamente.",
+      hoursComingSoon: "Horario próximamente — llama con anticipación.",
+    },
+    gallery: {
+      title: "Galería",
+      lead: "Un vistazo a la comida y al lugar.",
+      leadEmpty: "Un vistazo a la comida y al lugar. Las fotos llegarán pronto.",
+      hungrySeeMenu: "¿Tienes hambre? Mira el menú →",
+      photoComingSoon: "Foto próximamente",
+    },
+    catering: {
+      title: "Catering",
+      whatWeOffer: "Lo que ofrecemos",
+      letsPlanIt: "Planeémoslo",
+      reachOut: "Contáctanos con tu fecha y número de invitados, y nosotros nos encargamos del resto.",
+      callPhone: (phone: string) => `Llamar ${phone}`,
+      emailUs: "Envíanos un correo",
+    },
+    order: {
+      onlineOrdering: "Pedidos en Línea",
+      comingSoon: "Próximamente",
+      body: "Estamos preparando los pedidos en línea para que puedas disfrutar tus favoritos sin esperar. Todavía no está listo — mientras tanto, hacer tu pedido está a solo una llamada (o una visita rápida) de distancia.",
+      browseTheMenu: "Ver el Menú",
+      orderInPerson: (address: string) => `¿Prefieres pedir en persona? Estamos en ${address}.`,
+    },
+    reviews: {
+      eyebrow: "Reseñas",
+      lovedSince: (year: string) => `Queridos en Immokalee desde ${year}`,
+      reviewsOnGoogle: "reseñas en Google",
+      customerReviewsLabel: "Reseñas de clientes",
+    },
+    admin: {
+      nav: {
+        newDailySpecial: "Nuevo especial del día",
+        mainMenu: "Menú principal",
+        history: "Historial",
+        library: "Biblioteca",
+        sitePhotos: "Fotos del sitio",
+        settings: "Configuración",
+        signOut: "Cerrar sesión",
+        viewPublicSite: "Ver sitio público",
+      },
+      login: {
+        title: "MyMenuAgent",
+        tagline: "Inicia sesión para administrar el sitio de tu restaurante.",
+        usernameOrEmail: "Usuario o correo electrónico",
+        password: "Contraseña",
+        signIn: "Iniciar sesión",
+        signingIn: "Iniciando sesión…",
+        errorMissingFields: "Ingresa tu usuario o correo electrónico y tu contraseña.",
+        errorGeneric: "Ese inicio de sesión no coincide. Verifica tu usuario/correo y tu contraseña.",
+      },
+      capture: {
+        title: "Fotografía los especiales de hoy",
+        description:
+          "Toma o elige una foto de tu pizarra de especiales. La leeremos y crearemos un menú editable que podrás revisar y corregir — luego publica una versión limpia y bien formateada.",
+        takeOrChoosePhoto: "Tomar o elegir una foto",
+        choosePhotoDifferent: "Elegir otra foto",
+        readThisMenu: "Leer este menú",
+        preparingPhoto: "Preparando foto…",
+        uploading: "Subiendo…",
+        readingMenu: "Leyendo tu menú (esto puede tardar un momento)…",
+        resumeTitle: "Tienes un especial en progreso.",
+        resumeHasImage: "Continúa donde lo dejaste — tu trabajo está guardado.",
+        resumeNoImage: "Leíste un menú pero aún no lo terminaste. Continúa donde lo dejaste.",
+        resume: "Continuar",
+        startNew: "Empezar uno nuevo",
+        errorUploadPrep: "No se pudo preparar la subida.",
+        errorGeneric: "Algo salió mal.",
+      },
+      review: {
+        heading: "Revisar y publicar",
+        description:
+          "Leímos tu foto en el menú de abajo. Corrige lo que se vea mal — especialmente lo resaltado — luego renderiza y publica una versión limpia y bien formateada.",
+        style: "Estilo",
+        translateToSpanish: "Traducir al español",
+        reTranslateToSpanish: "Volver a traducir al español",
+        translating: "Traduciendo…",
+        showSpanish: "Mostrar español",
+        spanishSaved: "✓ Versión en español guardada",
+        translatedMessage: "Traducido — revisa abajo y luego Guarda y renderiza.",
+        errorTranslate: "La traducción falló.",
+        errorRender: "No se pudo renderizar.",
+        errorPublish: "No se pudo publicar.",
+        errorSchedule: "No se pudo programar.",
+        saveAndRender: "Guardar y renderizar menú",
+        rendering: "Renderizando…",
+        renderedUpToDate: "Renderizado ✓ — actualizado",
+        englishAndSpanish: " (inglés + español)",
+        editTheMenu: "Editar el menú",
+        uncertainWarning: "Por favor verifica esto — la foto fue difícil de leer aquí:",
+        maybeSuggestion: (value: string) => ` (tal vez "${value}")`,
+        untitled: "Sin título",
+        notSet: "No definido",
+        set: "Definido",
+        itemCount: (n: number) => `${n} artículo${n === 1 ? "" : "s"}`,
+        published: "Publicado — tu especial ya está en línea.",
+        viewOnSite: "Verlo en tu sitio →",
+        noMenuData: "Este borrador no tiene datos de menú para editar.",
+        generatedImageAlt: "Menú especial generado",
+        livePreviewAlt: "Vista previa en vivo del menú renderizado",
+        livePreviewAltEs: "Vista previa en vivo del menú renderizado en español",
+        header: {
+          sectionTitle: "Encabezado",
+          title: "Título",
+          titleEs: "Título (en español)",
+          date: "Fecha",
+          dateEs: "Fecha (en español)",
+          subtitleNote: "Subtítulo / nota",
+          subtitleNoteEs: "Subtítulo / nota (en español)",
+          letterheadNote:
+            "El nombre, la dirección y el teléfono del restaurante se completan automáticamente desde tu perfil (Configuración) — iguales en la versión en inglés y en español.",
+        },
+        entrees: {
+          title: "Platos principales",
+          itemName: "Nombre del platillo",
+          price: "Precio",
+          description: "Descripción (opcional)",
+          addEntree: "+ Agregar plato principal",
+          lowConfidence: "Confianza baja — verifica esta lectura.",
+          nameEs: "Nombre del platillo (en español)",
+          descriptionEs: "Descripción (en español, opcional)",
+        },
+        featured: {
+          title: "Platillos destacados",
+          name: "Nombre",
+          description: "Descripción",
+          price: "Precio",
+          nameEs: "Nombre (en español)",
+          descriptionEs: "Descripción (en español)",
+          addFeatured: "+ Agregar platillo destacado",
+        },
+        soup: {
+          title: "Sopas",
+          name: "Nombre de la sopa",
+          nameEs: "Nombre de la sopa (en español)",
+          tierLabel: "Tamaño (ej. Taza, Chico) — en blanco para un solo precio",
+          tierPrice: "Precio",
+          tierLabelEs: "Tamaño (en español)",
+          addTier: "+ Agregar precio / tamaño",
+          addSoup: "+ Agregar sopa",
+        },
+        combos: {
+          title: "Combos",
+          name: "Nombre",
+          price: "Precio",
+          addCombo: "+ Agregar combo",
+          nameEs: "Nombre (en español)",
+        },
+        veggie: {
+          title: "Plato vegetariano",
+          description: "Descripción",
+          price: "Precio",
+          descriptionEs: "Descripción (en español)",
+        },
+        desserts: {
+          title: "Postres",
+          sectionLabel: 'Título de la sección según la pizarra (ej. "Slice of Cake") — en blanco para "Desserts"',
+          sectionLabelEs: "Título de la sección (en español)",
+          name: "Nombre",
+          price: "Precio",
+          addDessert: "+ Agregar postre",
+          nameEs: "Nombre (en español)",
+        },
+        sides: {
+          title: "Acompañamientos",
+          addSide: "+ Agregar acompañamiento",
+          spanishPlaceholder: "Español",
+        },
+        additional: {
+          title: "Otras secciones",
+          summaryEmpty: "Ninguna",
+          help: "Cualquier cosa en la pizarra que no encaje en las secciones de arriba — Desayuno, Aperitivos, Menú Infantil, Bebidas, etc. La IA coloca aquí las secciones que no reconoce; también puedes agregar las tuyas.",
+          sectionTitle: "Título de la sección (ej. Desayuno)",
+          sectionTitleEs: "Título de la sección (en español)",
+          note: "Nota de la sección, opcional (ej. Servido con pan de maíz)",
+          noteEs: "Nota de la sección (en español)",
+          itemName: "Nombre del platillo",
+          itemNameEs: "Nombre del platillo (en español)",
+          itemPrice: "Precio",
+          itemDescription: "Descripción (opcional)",
+          itemDescriptionEs: "Descripción (en español)",
+          addItem: "+ Agregar platillo",
+          addSection: "+ Agregar sección",
+          removeSection: "Eliminar sección",
+        },
+        remove: "Eliminar",
+        publishBar: {
+          scheduledToGoLive: (date: string) => `Programado para publicarse ${date}`,
+          cancelSchedule: "Cancelar programación",
+          publishNow: "Aprobar y publicar ahora",
+          publishing: "Publicando…",
+          schedule: "Programar",
+          saveBeforePublish: "Guarda y renderiza tus cambios antes de publicar.",
+        },
+      },
+    },
+  },
+};
+
+/** Pure lookup — safe to call from client or server components alike. */
+export function getDictionary(locale: Locale): Dictionary {
+  return dictionary[locale];
+}
