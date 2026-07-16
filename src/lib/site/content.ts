@@ -28,6 +28,17 @@ interface SiteContentShape {
   highlights: { title: string; body: string }[];
   about: { lead: string; body: string[] };
   catering: { lead: string; body: string[]; offerings: string[] };
+  /**
+   * Jobs page. `expect` and `eeo` are deliberately grounded in what the real
+   * application form actually says (it is 4 pages; page 1 is an attestation
+   * covering truthfulness and permission to check references/education/work
+   * history; it states EEO status and offers accommodation) — do NOT add
+   * claims about open roles, pay, hours, or hiring process here, none of
+   * which are known. See (marketing)/jobs/page.tsx.
+   */
+  jobs: { lead: string; body: string[]; expect: string[]; eeo: string[] };
+  /** Email/Fax List page intro — the form's own labels live in the dictionary (`emailFax`). */
+  emailFax: { lead: string; body: string[] };
 }
 
 const en: SiteContentShape = {
@@ -112,6 +123,33 @@ const en: SiteContentShape = {
       "Pickup or drop-off available",
     ],
   },
+
+  jobs: {
+    lead: "Come work with us.",
+    body: [
+      "The food here is made from scratch every single day, and that only works because of the people who show up to do it — in the kitchen, on the floor, and behind the counter.",
+      "If that sounds like you, the application below is where to start. It comes straight to us.",
+    ],
+    // Every line below is grounded in the application form's own page 1.
+    expect: [
+      "It's four pages, and you can fill it out on your phone.",
+      "The first page is a short statement to read and agree to before you begin.",
+      "You'll confirm that your answers are true and complete, and give us permission to check your references, education, and work history.",
+      "Sending it in doesn't guarantee a job or an interview — it's the first step.",
+    ],
+    eeo: [
+      "We're an equal opportunity employer. Your application won't be used to limit or exclude you from consideration on any basis prohibited by local, state, or federal law.",
+      "If you need a reasonable accommodation to fill out the application or to interview, tell any one of our representatives and we'll take care of it.",
+    ],
+  },
+
+  emailFax: {
+    lead: "Get the daily special sent to you.",
+    body: [
+      "Every morning we write up the day's specials. If you'd like that menu to come straight to you — by fax, by email, or both — fill this out and we'll add you to the send list.",
+      "It works for businesses and individuals alike: a business name helps us label it for your break room, but a first name is all we need if it's just for you.",
+    ],
+  },
 };
 
 const es: SiteContentShape = {
@@ -191,6 +229,32 @@ const es: SiteContentShape = {
       "Almuerzos empacados para reuniones y eventos",
       "Menús personalizados para fiestas y días festivos",
       "Disponible para recoger o entregar",
+    ],
+  },
+
+  jobs: {
+    lead: "Ven a trabajar con nosotros.",
+    body: [
+      "Aquí la comida se prepara desde cero todos los días, y eso solo funciona gracias a la gente que llega a hacerlo — en la cocina, en el comedor y detrás del mostrador.",
+      "Si eso te describe, la solicitud de abajo es el lugar para empezar. Nos llega directamente a nosotros.",
+    ],
+    expect: [
+      "Son cuatro páginas, y puedes llenarla desde tu teléfono.",
+      "La primera página es una breve declaración que debes leer y aceptar antes de comenzar.",
+      "Confirmarás que tus respuestas son verdaderas y completas, y nos darás permiso para verificar tus referencias, tu educación y tu historial laboral.",
+      "Enviarla no garantiza un empleo ni una entrevista — es el primer paso.",
+    ],
+    eeo: [
+      "Somos un empleador que ofrece igualdad de oportunidades. Tu solicitud no se usará para limitarte ni excluirte de consideración por ningún motivo prohibido por las leyes locales, estatales o federales.",
+      "Si necesitas una adaptación razonable para llenar la solicitud o para la entrevista, avísale a cualquiera de nuestros representantes y lo resolvemos.",
+    ],
+  },
+
+  emailFax: {
+    lead: "Recibe el especial del día directamente.",
+    body: [
+      "Cada mañana preparamos el menú de especiales del día. Si quieres que ese menú te llegue directamente — por fax, por correo electrónico o por ambos — llena este formulario y te agregamos a la lista de envío.",
+      "Funciona igual para negocios y para personas: el nombre del negocio nos ayuda a etiquetarlo para tu comedor de empleados, pero si es solo para ti basta con tu nombre.",
     ],
   },
 };

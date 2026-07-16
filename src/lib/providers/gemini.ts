@@ -79,9 +79,17 @@ export function createGeminiAdapter(apiKey: string): ProviderAdapter {
     models: (cap) => (cap === "vision" ? MODELS : []),
     vision: {
       async parseMenu(image: ImageRef, opts) {
-        const res = await fetch(`${API_BASE}/models/${encodeURIComponent(opts.model)}:generateContent?key=${apiKey}`, {
+        // Key goes in the x-goog-api-key header, NOT the `?key=` query param
+        // Gemini also accepts. A key in a URL leaks into proxy/CDN/server
+        // access logs and any error report that echoes the request URL —
+        // which would contradict both crypto.ts's own "never in a way that
+        // could end up in request logs" rule and the /privacy page's claim
+        // that provider credentials are never written to a log. The OpenAI
+        // and xAI adapters already use an Authorization header; this is the
+        // same discipline (found by a compliance audit, 2026-07-16).
+        const res = await fetch(`${API_BASE}/models/${encodeURIComponent(opts.model)}:generateContent`, {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
           body: JSON.stringify({
             contents: [
               {

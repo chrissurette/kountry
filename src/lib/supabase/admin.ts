@@ -6,6 +6,9 @@ import { getServerEnv } from "@/lib/env";
  *   - the public menu read path (GET /api/public/{slug}/menu), which has no
  *     user session to check RLS against and must only ever read
  *     restaurants.live_snapshot_id's payload;
+ *   - the public homepage subscribe form (POST /api/public/{slug}/subscribe),
+ *     same reasoning — no session, and `subscribers` has no anon RLS policy
+ *     by design (see the migration's comment);
  *   - the cron schedule-promotion endpoint;
  *   - provider-credential encryption/decryption inside the provider adapter layer.
  * Never import this into a Server Component or any code path that serializes

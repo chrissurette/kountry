@@ -17,6 +17,10 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
+// One array drives BOTH the header (SiteNav) and the footer nav below —
+// adding a page here puts it in both, which is the intent. Jobs and
+// Email/Fax List sit last as secondary/utility pages, after the six that
+// speak to someone deciding where to eat.
 function navLinks(t: ReturnType<typeof getDictionary>["nav"]): NavLink[] {
   return [
     { href: "/menu", label: t.menu },
@@ -25,6 +29,8 @@ function navLinks(t: ReturnType<typeof getDictionary>["nav"]): NavLink[] {
     { href: "/visit", label: t.visit },
     { href: "/gallery", label: t.gallery },
     { href: "/catering", label: t.catering },
+    { href: "/jobs", label: t.jobs },
+    { href: "/email-fax-list", label: t.emailFaxList },
   ];
 }
 
@@ -97,7 +103,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
             )}
           </div>
 
-          <nav className="flex flex-col gap-2 text-sm lg:flex-row lg:flex-wrap lg:justify-center lg:gap-x-5 lg:gap-y-1">
+          <nav className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-5 sm:gap-y-1">
             {links.map((l) => (
               <Link key={l.href} href={l.href} className="hover:underline" style={{ color: "var(--site-text)" }}>
                 {l.label}
@@ -125,7 +131,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
                 ))}
               </div>
             )}
-            <div className="mt-4 flex flex-col gap-1 text-xs sm:items-end lg:mt-3 lg:flex-row lg:items-center lg:gap-3">
+            <div className="mt-4 flex flex-col gap-1 text-xs sm:mt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-3">
               <p style={{ color: "var(--site-muted)" }}>© {name}</p>
               <div className="flex gap-3">
                 <Link href="/privacy" className="hover:underline" style={{ color: "var(--site-muted)" }}>

@@ -157,14 +157,28 @@ export default async function MenuPage() {
         // scroll-mt offset is always correct. no-scrollbar (globals.css)
         // keeps native touch/wheel scrolling without a visible track.
         <nav
-          className="no-scrollbar scroll-fade-x sticky top-14 z-20 mx-auto mt-8 flex w-fit max-w-full flex-nowrap items-center gap-2 overflow-x-auto rounded-full border px-2 py-2 text-sm backdrop-blur"
+          className="no-scrollbar scroll-fade-x sticky top-14 z-20 mx-auto mt-8 flex w-fit max-w-full flex-nowrap items-center gap-0 overflow-x-auto rounded-full border px-0.5 py-1 text-xs backdrop-blur md:gap-2 md:px-2 md:py-2 md:text-sm"
           style={{ borderColor: "var(--site-border)", background: "color-mix(in srgb, var(--site-bg) 90%, transparent)" }}
         >
+          {/* Compact below md (phones only — a real tablet at 768px+ has
+              plenty of room even at full size, measured live) so all jump
+              links — including a 4th/5th category like Beverages — are more
+              likely to fit in the single row without relying on horizontal
+              scroll; still falls back to scroll+fade (above) for whatever
+              doesn't fit, rather than wrapping to a 2nd row (that broke the
+              sticky bar's height / scroll-mt offset, see the note above).
+              (Tried letting this bar bleed past main's own side padding via
+              max-w-[calc(100%+…)] to claw back a few more px — measured live
+              and it broke centering and caused real page overflow, since
+              mx-auto's "split remaining space evenly" only holds reliably
+              when content actually fits; reverted to max-w-full, which is
+              bounded and safe, and leaned on tighter spacing/type-size
+              instead.) */}
           {jumpLinks.map((l) => (
             <a
               key={l.id}
               href={`#${l.id}`}
-              className="shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 font-medium transition-colors hover:bg-black/5"
+              className="shrink-0 whitespace-nowrap rounded-full px-1 py-1 font-medium transition-colors hover:bg-black/5 md:px-3 md:py-1.5"
               style={{ color: "var(--site-primary)" }}
             >
               {l.label}

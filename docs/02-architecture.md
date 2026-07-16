@@ -26,7 +26,7 @@ Owner's phone (PWA, at /admin)              Public website (this app, at /)
                ▼
    Supabase: Postgres (menus, main menu, snapshots, item library, profile)
              Storage (photos, site media)
-             Vault (encrypted provider keys) · Auth
+             Auth  (provider keys are encrypted app-side, not in Vault — docs/01)
 ```
 
 ## The publish path — a pointer flip, not a deploy

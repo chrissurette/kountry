@@ -32,7 +32,7 @@ An audit asked "how easily does this break if the handwritten board's *format* c
 
 ## Secret storage
 
-- Provider keys encrypted at rest (Supabase Vault / AES-256-GCM with a server-only master key).
+- Provider keys encrypted at rest (AES-256-GCM with a server-only master key, app-side in `src/lib/providers/crypto.ts` — not Supabase Vault, which this line used to claim and which is not used anywhere).
 - Decrypted only inside server request handlers; never in client bundles, logs, or API responses (last-4 display only); write-only key API.
 - Uploaded source photos in private Storage buckets behind signed URLs; the *generated* Daily Special image is deliberately in a separate **public** bucket (`site-media`) since anonymous site visitors need to view it — docs/03's Main Menu vs. Daily Specials note.
 

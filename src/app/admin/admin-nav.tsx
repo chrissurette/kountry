@@ -26,6 +26,8 @@ function navLinks(t: ReturnType<typeof getDictionary>["admin"]["nav"]) {
     { href: "/admin/history", label: t.history, employee: false },
     { href: "/admin/library", label: t.library, employee: false },
     { href: "/admin/site", label: t.sitePhotos, employee: false },
+    { href: "/admin/subscribers", label: t.subscribers, employee: false },
+    { href: "/admin/email-fax-list", label: t.emailFaxList, employee: false },
     { href: "/admin/settings", label: t.settings, employee: false },
   ];
 }
@@ -73,13 +75,29 @@ export function AdminNav({
 
   return (
     <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      {/* xl:max-w-none is load-bearing, not cosmetic: the inline nav's ES
+          labels need ~1230px of row, so inside the old max-w-5xl (1024px)
+          cap the bar overflowed at EVERY viewport width — raising the
+          breakpoint alone fixed nothing (measured: 174px overflow at 1280
+          before this). Uncapping at xl means it *just* fits at the 1280
+          boundary (12px of slack in ES — normal for a breakpoint edge) and
+          gains real margin as the window widens; a fixed 7xl cap was tried
+          first and rejected because it froze that 12px as the permanent
+          maximum at every width. Re-measure BOTH locales at 1280 if a nav
+          label or item is ever added — ES is the binding constraint. */}
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 xl:max-w-none">
         <Link href="/" className="shrink-0 text-base font-semibold hover:underline" title={t.viewPublicSite}>
           {restaurantName}
         </Link>
 
-        {/* Desktop: inline nav (≥lg — 7 items incl. Sign out need the room; tablets/phones use the drawer) */}
-        <nav className="hidden items-center gap-0.5 lg:flex">
+        {/* Desktop: inline nav. ≥xl since 2026-07-16 — the Fax/Email List
+            link made it 8 items + Sign out, and at lg (1024px) the SPANISH
+            labels overflowed the bar by a measured 189px (page-level
+            horizontal scroll), while this project's history says EN-only
+            checks miss exactly this. Third occurrence of the crowding bug
+            (admin-nav md→lg at 7 items; SiteNav lg→xl at 8) — same fix each
+            time: more room before going inline; tablets use the drawer. */}
+        <nav className="hidden items-center gap-0.5 xl:flex">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -96,9 +114,12 @@ export function AdminNav({
           <div className="ml-1.5 flex items-center gap-1.5 border-l border-neutral-200 pl-1.5">
             {localeSwitcher}
             <form action={signOut}>
+              {/* whitespace-nowrap like the links: without it, flex pressure
+                  at the xl boundary wrapped "Cerrar sesión" to two lines and
+                  stretched the whole header (measured live, ES). */}
               <button
                 type="submit"
-                className="rounded-md px-2.5 py-1.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+                className="whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
               >
                 {t.signOut}
               </button>
@@ -106,8 +127,8 @@ export function AdminNav({
           </div>
         </nav>
 
-        {/* Mobile: locale switcher + hamburger */}
-        <div className="flex items-center gap-2 lg:hidden">
+        {/* Mobile/tablet: locale switcher + hamburger */}
+        <div className="flex items-center gap-2 xl:hidden">
           {localeSwitcher}
           <button
             type="button"
@@ -129,15 +150,29 @@ export function AdminNav({
         </div>
       </div>
 
-      {/* Mobile: drawer */}
+      {/* Mobile: drawer — a compact right-anchored dropdown card that floats
+          over the page, NOT a full-width in-flow bar. Same three properties
+          the public SiteNav's drawer landed on (see its own dated note in
+          CLAUDE.md; this is the owner's stated general rule for every dropdown
+          menu in the app):
+            1. text-right on every row — the trigger, the locale pill, and
+               everything else in the top bar live on the right, so a
+               left-hugging list reads as misaligned with its own trigger.
+            2. right-anchored + fixed width, so there's no dead blank space to
+               the left of a narrow text column. right-4/sm:right-6 matches
+               the header's own px-4/sm:px-6, lining the card's edge up with
+               the hamburger button.
+            3. absolute (header is sticky = a positioning context), so opening
+               it floats over the page instead of pushing every element down.
+               Needs its own bg/shadow once it's out of the header's box. */}
       {open && (
-        <nav className="flex flex-col gap-0.5 border-t border-neutral-200 bg-white px-3 py-2 lg:hidden">
+        <nav className="absolute right-4 top-full z-20 flex max-h-[calc(100dvh-4rem)] w-56 max-w-[calc(100vw-2rem)] flex-col gap-0.5 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg sm:right-6 xl:hidden">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className={`rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`rounded-md px-3 py-2.5 text-right text-sm font-medium transition-colors ${
                 isActive(link.href) ? "bg-neutral-900 text-white" : "text-neutral-700 hover:bg-neutral-100"
               }`}
             >
@@ -147,7 +182,7 @@ export function AdminNav({
           <form action={signOut} className="mt-1 border-t border-neutral-200 pt-2">
             <button
               type="submit"
-              className="w-full rounded-md px-3 py-2.5 text-left text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
+              className="w-full rounded-md px-3 py-2.5 text-right text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
             >
               {t.signOut}
             </button>

@@ -1,0 +1,29 @@
+<!doctype html>
+<!--
+  Netlify Forms detection file — NOT a page anyone visits. Netlify's build
+  scanner only registers forms it finds in static HTML, and on the Next.js
+  runtime every real page is a server-rendered function it can't see, so this
+  hidden definition (Netlify's documented Next.js workaround) is what makes
+  the "email-fax-list" form exist on the Netlify side. The real form lives at
+  /email-fax-list; its API route server-side-forwards each saved submission
+  here as a url-encoded POST so Netlify records it and fires the owner's
+  email notification. Field names below must stay in sync with what
+  src/app/api/public/[slug]/email-fax-list/route.ts forwards.
+
+  Requires "form detection" to be enabled once in the Netlify UI
+  (Site configuration -> Forms), and the notification email configured there
+  (Forms -> Form notifications) after the first deploy that includes this file.
+-->
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Form definitions</title></head>
+  <body>
+    <form name="email-fax-list" data-netlify="true" hidden>
+      <input type="text" name="business_name" />
+      <input type="text" name="method" />
+      <input type="text" name="fax" />
+      <input type="email" name="email" />
+      <input type="text" name="days" />
+      <textarea name="notes"></textarea>
+    </form>
+  </body>
+</html>

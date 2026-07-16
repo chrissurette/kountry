@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getSiteRestaurant } from "@/lib/site/restaurant";
 
 export const revalidate = 300;
@@ -34,13 +35,13 @@ export default async function TermsPage() {
         Using the {name} website
       </h1>
       <p className="mt-4 text-sm" style={{ color: "var(--site-muted)" }}>
-        Last updated July 14, 2026.
+        Last updated July 16, 2026.
       </p>
 
       <Section heading="What this site is for">
         <p>
-          This website is here to help you find our hours, menu, location, and how to reach us. By using it, you
-          agree to these terms.
+          This website is here to help you find our hours, menu, location, and how to reach us, and to let you join
+          our email list if you want to. By using it, you agree to these terms.
         </p>
       </Section>
 
@@ -51,8 +52,10 @@ export default async function TermsPage() {
           ahead to confirm anything time-sensitive.
         </p>
         <p>
-          Our Daily Specials image is generated with the help of AI from a photo of our own handwritten board and
-          is reviewed by staff before it&apos;s posted, but food presentation may vary from the photo.
+          Our Daily Specials board is handwritten in the restaurant. Staff photograph it, an AI tool reads the
+          handwriting into a list of dishes and prices, staff check and correct that list, and our software then
+          typesets the clean version you see here. We aim to get every item and price right, but if something on
+          this page ever disagrees with the board in the restaurant, the board is what we&apos;re actually serving.
         </p>
       </Section>
 
@@ -60,6 +63,18 @@ export default async function TermsPage() {
         <p>
           This site doesn&apos;t process orders or take payment information. &quot;Order&quot; and &quot;Call to
           Order&quot; links connect you to us by phone — no payment card information is ever entered on this site.
+        </p>
+      </Section>
+
+      <Section heading="Our email list">
+        <p>
+          Joining our email list is optional, and you can leave it at any time using the unsubscribe link in any
+          email we send, or by contacting us. Only sign up with an email address or phone number that&apos;s
+          yours. How we handle what you give us is described in our{" "}
+          <Link href="/privacy" className="font-semibold hover:underline" style={{ color: "var(--site-accent)" }}>
+            Privacy Policy
+          </Link>
+          .
         </p>
       </Section>
 

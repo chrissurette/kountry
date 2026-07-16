@@ -174,6 +174,21 @@ export interface SiteMedia {
   created_at: string;
 }
 
+export type SubscriberSource = "homepage" | "manual";
+
+export interface Subscriber {
+  id: string;
+  restaurant_id: string;
+  email: string | null;
+  phone: string | null;
+  source: SubscriberSource;
+  /** The capability in an unsubscribe link — 32 random bytes as hex, unique per row. Never expose this in any admin/public response body; it belongs only in the link itself and the CSV export the owner mails from. */
+  unsubscribe_token: string;
+  /** Null = subscribed. Set = suppressed: kept as a record of the opt-out (so a later re-add can't silently re-subscribe them) but excluded from the email export. */
+  unsubscribed_at: string | null;
+  created_at: string;
+}
+
 export type MainMenuCategory = "breakfast" | "lunch_dinner" | "beverages";
 
 export interface MainMenuSection {

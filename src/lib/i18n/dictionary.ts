@@ -15,6 +15,8 @@ export interface Dictionary {
     visit: string;
     gallery: string;
     catering: string;
+    jobs: string;
+    emailFaxList: string;
     callToOrder: string;
     openMenu: string;
     closeMenu: string;
@@ -33,12 +35,41 @@ export interface Dictionary {
     openNow: string;
     closedNow: string;
     close: string;
+    /** Body line for a page that exists in the nav but has no content yet (Jobs, Email/Fax List). Shared while they're both genuine placeholders — give a page its own copy the moment it gets real content. */
+    pageComingSoon: string;
     days: Record<string, string>;
   };
   home: {
     viewTheMenu: string;
     comeSeeUs: string;
     getDirectionsArrow: string;
+  };
+  subscribe: {
+    heading: string;
+    body: string;
+    emailPlaceholder: string;
+    phonePlaceholder: string;
+    submit: string;
+    submitting: string;
+    success: string;
+    error: string;
+    validationError: string;
+    rateLimited: string;
+  };
+  unsubscribe: {
+    heading: string;
+    confirmBody: (contact: string) => string;
+    confirmButton: string;
+    working: string;
+    doneHeading: string;
+    doneBody: (contact: string) => string;
+    alreadyHeading: string;
+    alreadyBody: (contact: string) => string;
+    invalidHeading: string;
+    invalidBody: string;
+    error: string;
+    rateLimited: string;
+    backToSite: string;
   };
   menu: {
     title: string;
@@ -96,6 +127,43 @@ export interface Dictionary {
     browseTheMenu: string;
     orderInPerson: (address: string) => string;
   };
+  emailFax: {
+    nameLabel: string;
+    nameHint: string;
+    methodLabel: string;
+    methodFax: string;
+    methodEmail: string;
+    methodBoth: string;
+    faxLabel: string;
+    emailLabel: string;
+    daysLabel: string;
+    daysHint: string;
+    notesLabel: string;
+    submit: string;
+    submitting: string;
+    successHeading: string;
+    successBody: string;
+    error: string;
+    rateLimited: string;
+    nameRequired: string;
+    methodRequired: string;
+    faxRequired: string;
+    emailRequired: string;
+    removalNote: string;
+  };
+  jobs: {
+    applyHeading: string;
+    /** Must say the image is a *preview* that opens the real form — it shows a checkbox and a Next button that are only a picture, so nothing may imply they work here. */
+    applyBody: string;
+    openApplication: string;
+    /** Alt text for the screenshot, which is wrapped in the link — so it states the link's destination, not a description of the picture. */
+    formImageAlt: string;
+    whatToExpect: string;
+    equalOpportunity: string;
+    questions: string;
+    callWithQuestions: (phone: string) => string;
+    stopBy: (address: string) => string;
+  };
   reviews: {
     eyebrow: string;
     lovedSince: (year: string) => string;
@@ -109,6 +177,8 @@ export interface Dictionary {
       history: string;
       library: string;
       sitePhotos: string;
+      subscribers: string;
+      emailFaxList: string;
       settings: string;
       signOut: string;
       viewPublicSite: string;
@@ -277,6 +347,8 @@ const dictionary: Record<Locale, Dictionary> = {
       visit: "Visit",
       gallery: "Gallery",
       catering: "Catering",
+      jobs: "Jobs",
+      emailFaxList: "Email/Fax List",
       callToOrder: "Call to Order",
       openMenu: "Open menu",
       closeMenu: "Close menu",
@@ -295,6 +367,7 @@ const dictionary: Record<Locale, Dictionary> = {
       openNow: "Open now",
       closedNow: "Closed now",
       close: "Close",
+      pageComingSoon: "This page is coming soon — check back shortly.",
       days: {
         mon: "Monday",
         tue: "Tuesday",
@@ -309,6 +382,34 @@ const dictionary: Record<Locale, Dictionary> = {
       viewTheMenu: "View the Menu",
       comeSeeUs: "Come see us",
       getDirectionsArrow: "Get directions →",
+    },
+    subscribe: {
+      heading: "Stay in the loop",
+      body: "Get a heads-up on daily specials, events, and news — no spam, unsubscribe any time.",
+      emailPlaceholder: "Email address",
+      phonePlaceholder: "Phone number (optional)",
+      submit: "Sign me up",
+      submitting: "Signing up…",
+      success: "You're on the list — thanks!",
+      error: "Something went wrong. Please try again.",
+      validationError: "Enter an email or phone number.",
+      rateLimited: "Too many sign-up attempts from your connection. Please try again later.",
+    },
+    unsubscribe: {
+      heading: "Leave our email list?",
+      confirmBody: (contact: string) => `We'll stop sending updates to ${contact}.`,
+      confirmButton: "Yes, take me off the list",
+      working: "Removing you…",
+      doneHeading: "You're off the list",
+      doneBody: (contact: string) => `We won't send any more updates to ${contact}. Sorry to see you go!`,
+      alreadyHeading: "You're already off the list",
+      alreadyBody: (contact: string) => `${contact} isn't receiving our updates.`,
+      invalidHeading: "This link is no longer valid",
+      invalidBody:
+        "It may have already been used, or the address may have been removed. If you're still getting emails you don't want, just contact us and we'll take care of it.",
+      error: "Something went wrong. Please try again, or contact us and we'll remove you.",
+      rateLimited: "Too many requests right now. Please try again in a little while — or contact us and we'll remove you.",
+      backToSite: "Back to our website",
     },
     menu: {
       title: "Menu",
@@ -366,6 +467,41 @@ const dictionary: Record<Locale, Dictionary> = {
       browseTheMenu: "Browse the Menu",
       orderInPerson: (address: string) => `Prefer to order in person? We're at ${address}.`,
     },
+    emailFax: {
+      nameLabel: "Business or location name",
+      nameHint: "If it's just for you, your first name is fine.",
+      methodLabel: "How would you like to receive it?",
+      methodFax: "Fax",
+      methodEmail: "Email",
+      methodBoth: "Both",
+      faxLabel: "Fax number (with area code)",
+      emailLabel: "Email address",
+      daysLabel: "Which days would you like it?",
+      daysHint: "Select all that apply — leave them all unchecked to get it every day.",
+      notesLabel: "Notes or comments (optional)",
+      submit: "Send my request",
+      submitting: "Sending…",
+      successHeading: "Got it — you're on the list!",
+      successBody: "We'll start sending you the daily special. If anything changes, just call or write and we'll update it.",
+      error: "Something went wrong. Please try again, or give us a call.",
+      rateLimited: "Too many requests from your connection. Please try again later.",
+      nameRequired: "Enter a business or first name.",
+      methodRequired: "Choose fax, email, or both.",
+      faxRequired: "Enter a fax number.",
+      emailRequired: "Enter an email address.",
+      removalNote: "Want to stop receiving it, or change your days? Just tell us — call or reply any time and we'll take care of it.",
+    },
+    jobs: {
+      applyHeading: "Apply now",
+      applyBody: "Here's the first page of the application. Tap it to open the real thing in a new tab.",
+      openApplication: "Open the application →",
+      formImageAlt: "Open the employee application form",
+      whatToExpect: "What to expect",
+      equalOpportunity: "Equal opportunity",
+      questions: "Questions?",
+      callWithQuestions: (phone: string) => `Call us at ${phone}`,
+      stopBy: (address: string) => `You're welcome to stop by, too — we're at ${address}.`,
+    },
     reviews: {
       eyebrow: "Reviews",
       lovedSince: (year: string) => `Loved in Immokalee since ${year}`,
@@ -379,6 +515,8 @@ const dictionary: Record<Locale, Dictionary> = {
         history: "History",
         library: "Library",
         sitePhotos: "Site Photos",
+        subscribers: "Subscribers",
+        emailFaxList: "Fax/Email List",
         settings: "Settings",
         signOut: "Sign out",
         viewPublicSite: "View public site",
@@ -548,6 +686,8 @@ const dictionary: Record<Locale, Dictionary> = {
       visit: "Visítanos",
       gallery: "Galería",
       catering: "Catering",
+      jobs: "Empleos",
+      emailFaxList: "Lista de correo/fax",
       callToOrder: "Llame para ordenar",
       openMenu: "Abrir menú",
       closeMenu: "Cerrar menú",
@@ -566,6 +706,7 @@ const dictionary: Record<Locale, Dictionary> = {
       openNow: "Abierto ahora",
       closedNow: "Cerrado ahora",
       close: "Cerrar",
+      pageComingSoon: "Esta página estará disponible próximamente — vuelve pronto.",
       days: {
         mon: "Lunes",
         tue: "Martes",
@@ -580,6 +721,34 @@ const dictionary: Record<Locale, Dictionary> = {
       viewTheMenu: "Ver el menú",
       comeSeeUs: "Ven a vernos",
       getDirectionsArrow: "Cómo llegar →",
+    },
+    subscribe: {
+      heading: "Mantente al tanto",
+      body: "Entérate de los especiales del día, eventos y noticias — sin spam, cancela cuando quieras.",
+      emailPlaceholder: "Correo electrónico",
+      phonePlaceholder: "Número de teléfono (opcional)",
+      submit: "Quiero recibir novedades",
+      submitting: "Enviando…",
+      success: "¡Listo! Ya estás en la lista.",
+      error: "Algo salió mal. Inténtalo de nuevo.",
+      validationError: "Ingresa un correo electrónico o un número de teléfono.",
+      rateLimited: "Demasiados intentos desde tu conexión. Inténtalo de nuevo más tarde.",
+    },
+    unsubscribe: {
+      heading: "¿Salir de nuestra lista de correo?",
+      confirmBody: (contact: string) => `Dejaremos de enviar novedades a ${contact}.`,
+      confirmButton: "Sí, quítenme de la lista",
+      working: "Quitándote…",
+      doneHeading: "Ya no estás en la lista",
+      doneBody: (contact: string) => `No enviaremos más novedades a ${contact}. ¡Lamentamos verte partir!`,
+      alreadyHeading: "Ya no estabas en la lista",
+      alreadyBody: (contact: string) => `${contact} no está recibiendo nuestras novedades.`,
+      invalidHeading: "Este enlace ya no es válido",
+      invalidBody:
+        "Puede que ya se haya usado, o que la dirección se haya eliminado. Si sigues recibiendo correos que no quieres, contáctanos y lo resolvemos.",
+      error: "Algo salió mal. Inténtalo de nuevo, o contáctanos y te quitamos de la lista.",
+      rateLimited: "Demasiadas solicitudes en este momento. Inténtalo de nuevo en un rato — o contáctanos y te quitamos de la lista.",
+      backToSite: "Volver a nuestro sitio",
     },
     menu: {
       title: "Menú",
@@ -637,6 +806,41 @@ const dictionary: Record<Locale, Dictionary> = {
       browseTheMenu: "Ver el Menú",
       orderInPerson: (address: string) => `¿Prefieres pedir en persona? Estamos en ${address}.`,
     },
+    emailFax: {
+      nameLabel: "Nombre del negocio o local",
+      nameHint: "Si es solo para ti, basta con tu nombre.",
+      methodLabel: "¿Cómo te gustaría recibirlo?",
+      methodFax: "Fax",
+      methodEmail: "Correo electrónico",
+      methodBoth: "Ambos",
+      faxLabel: "Número de fax (con código de área)",
+      emailLabel: "Correo electrónico",
+      daysLabel: "¿Qué días te gustaría recibirlo?",
+      daysHint: "Marca todos los que quieras — si no marcas ninguno, te lo enviamos todos los días.",
+      notesLabel: "Notas o comentarios (opcional)",
+      submit: "Enviar mi solicitud",
+      submitting: "Enviando…",
+      successHeading: "¡Listo! Ya estás en la lista.",
+      successBody: "Empezaremos a enviarte el especial del día. Si algo cambia, llámanos o escríbenos y lo actualizamos.",
+      error: "Algo salió mal. Inténtalo de nuevo, o llámanos.",
+      rateLimited: "Demasiadas solicitudes desde tu conexión. Inténtalo de nuevo más tarde.",
+      nameRequired: "Ingresa el nombre del negocio o tu nombre.",
+      methodRequired: "Elige fax, correo electrónico o ambos.",
+      faxRequired: "Ingresa un número de fax.",
+      emailRequired: "Ingresa un correo electrónico.",
+      removalNote: "¿Quieres dejar de recibirlo o cambiar tus días? Solo dinos — llama o responde cuando quieras y lo resolvemos.",
+    },
+    jobs: {
+      applyHeading: "Solicita empleo",
+      applyBody: "Esta es la primera página de la solicitud. Tócala para abrir la solicitud real en una pestaña nueva.",
+      openApplication: "Abrir la solicitud →",
+      formImageAlt: "Abrir el formulario de solicitud de empleo",
+      whatToExpect: "Qué esperar",
+      equalOpportunity: "Igualdad de oportunidades",
+      questions: "¿Preguntas?",
+      callWithQuestions: (phone: string) => `Llámanos al ${phone}`,
+      stopBy: (address: string) => `También puedes visitarnos — estamos en ${address}.`,
+    },
     reviews: {
       eyebrow: "Reseñas",
       lovedSince: (year: string) => `Queridos en Immokalee desde ${year}`,
@@ -650,6 +854,8 @@ const dictionary: Record<Locale, Dictionary> = {
         history: "Historial",
         library: "Biblioteca",
         sitePhotos: "Fotos del sitio",
+        subscribers: "Suscriptores",
+        emailFaxList: "Lista de fax/correo",
         settings: "Configuración",
         signOut: "Cerrar sesión",
         viewPublicSite: "Ver sitio público",

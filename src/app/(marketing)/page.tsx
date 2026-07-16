@@ -11,6 +11,7 @@ import { getDictionary } from "@/lib/i18n/dictionary";
 import { OpenNowBadge } from "./open-now-badge";
 import { SpecialsPreview } from "./specials-preview";
 import { ReviewsSection } from "./reviews-section";
+import { SubscribeForm } from "./subscribe-form";
 
 // The specials preview refreshes on the same 60s ISR window as the menu
 // page; on-demand revalidation (src/lib/publish/service.ts) also fires on
@@ -187,7 +188,7 @@ export default async function HomePage() {
       <ReviewsSection variant="carousel" locale={locale} />
 
       {/* Visit strip */}
-      <section className="mx-auto max-w-5xl px-5 pb-20 xl:max-w-6xl 2xl:max-w-7xl">
+      <section className="mx-auto max-w-5xl px-5 py-16 xl:max-w-6xl 2xl:max-w-7xl">
         <div
           className="grid gap-8 rounded-3xl px-8 py-10 sm:grid-cols-2 xl:gap-12 xl:px-12 xl:py-14"
           style={{ background: "color-mix(in srgb, var(--site-primary) 6%, var(--site-bg))" }}
@@ -243,6 +244,21 @@ export default async function HomePage() {
           )}
         </div>
       </section>
+
+      {/* Subscribe */}
+      {restaurant && (
+        <section className="mx-auto max-w-5xl px-5 pb-20 text-center xl:max-w-6xl 2xl:max-w-7xl">
+          <h2 className="font-site-heading text-2xl font-bold sm:text-3xl" style={{ color: "var(--site-primary)" }}>
+            {t.subscribe.heading}
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm" style={{ color: "var(--site-muted)" }}>
+            {t.subscribe.body}
+          </p>
+          <div className="mt-6">
+            <SubscribeForm restaurantSlug={restaurant.slug} locale={locale} />
+          </div>
+        </section>
+      )}
     </main>
   );
 }

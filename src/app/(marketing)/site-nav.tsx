@@ -15,12 +15,45 @@ export interface NavLink {
 const LOCALE_LABEL: Record<Locale, string> = { en: "EN", es: "ES" };
 
 /**
- * Public site header: inline links on desktop, a toggle menu on mobile. Kept
- * client-side only for the mobile open/close state — the brand name and links
- * are passed in from the server layout that reads the profile. A "Call to
- * Order" CTA is always visible when a phone number is set — until online
- * ordering ships, the phone is the actual ordering mechanism, so it needs to
- * be one tap away on every page, not buried in the nav list.
+ * Public site header: inline links + toggle + CTA on desktop, a hamburger
+ * drawer below that. Kept client-side only for the mobile open/close state —
+ * the brand name and links are passed in from the server layout that reads
+ * the profile. A "Call to Order" CTA is always visible when a phone number is
+ * set — until online ordering ships, the phone is the actual ordering
+ * mechanism, so it needs to be one tap away on every page, not buried in the
+ * nav list.
+ *
+ * Three responsive tiers, not two (2026-07-16, reported live: at a mid-width
+ * viewport all 7 links + the logo + the EN/ES toggle + the CTA were forced
+ * into one row — the logo wrapped to 2 lines and the CTA button visibly
+ * broke/wrapped). Same crowding class of bug admin-nav hit earlier with far
+ * fewer items (see its own dated note) — same fix, raise the hamburger
+ * threshold so there's real room before anything goes inline.
+ *   - >=xl: full inline layout (logo | centered links | toggle+CTA).
+ *   - <xl down to 460px: hamburger for the link list only; the EN/ES toggle
+ *     and CTA stay in the top bar next to the hamburger icon — the
+ *     phone-order CTA is too important to bury on an ordinary phone.
+ *   - <460px ("potentially very thin"): the toggle and CTA also move into the
+ *     drawer, so the top bar is just the logo + hamburger.
+ *
+ * That inline threshold has now moved twice, both times because the link set
+ * grew: sm (640px) -> lg (1024px) at 7 links, then **lg -> xl (1280px) on
+ * 2026-07-16 when Jobs + Email/Fax List brought it to 8 (9 off-homepage,
+ * where the Home link also renders)**. At lg the Spanish header overflowed
+ * its own bar by 81px and pushed the whole page into horizontal scroll,
+ * while English fit with *exactly* 0px to spare — i.e. English alone would
+ * have shipped this bug invisibly, and even "fitting" was one label away
+ * from breaking. Measured live, both locales, at the boundary.
+ *
+ * 460px (not ~400px) is deliberate for the same reason: Spanish's "Llame
+ * para ordenar" CTA is ~45px wider than English's "Call to Order" and pushed
+ * a first pass at 430px into real overflow.
+ *
+ * **Re-verify BOTH locales at the xl boundary if this threshold, the CTA
+ * copy, or the link set ever changes** — ES is the binding constraint every
+ * time, and this comment's own warning is what caught the 8-link regression.
+ * The CTA additionally carries shrink-0 whitespace-nowrap everywhere it
+ * renders so it can never wrap mid-button, per the reported bug.
  *
  * The EN/ES pill is the language toggle (step 1 of the site-wide Spanish
  * translation): it writes a plain preference cookie and refreshes the route
@@ -83,18 +116,18 @@ export function SiteNav({
         background: "color-mix(in srgb, var(--site-bg) 88%, transparent)",
       }}
     >
-      <div className="flex items-center justify-between px-6 py-3 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:px-8">
+      <div className="flex items-center justify-between px-6 py-3 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:px-8">
         <Link
           href="/"
           onClick={() => setOpen(false)}
-          className="font-site-heading text-lg font-semibold tracking-tight sm:justify-self-start"
+          className="shrink-0 whitespace-nowrap font-site-heading text-lg font-semibold tracking-tight xl:justify-self-start"
           style={{ color: "var(--site-primary)" }}
         >
           {name}
         </Link>
 
         {/* Centered nav on desktop (the auto middle column of the 3-zone grid). */}
-        <nav className="hidden items-center justify-center gap-6 text-sm sm:flex">
+        <nav className="hidden items-center justify-center gap-6 text-sm xl:flex">
           {!isHome && (
             <Link
               href="/"
@@ -127,12 +160,14 @@ export function SiteNav({
           })}
         </nav>
 
-        <div className="hidden items-center gap-3 sm:flex sm:justify-self-end">
+        {/* Desktop-only right cluster (>=xl) — same content as the two
+            below-xl fallbacks further down, never all three at once. */}
+        <div className="hidden items-center gap-3 xl:flex xl:justify-self-end">
           {localeSwitcher}
           {phone && (
             <a
               href={`tel:${phone}`}
-              className="inline-block rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+              className="inline-block shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
               style={{ background: "var(--site-primary)" }}
             >
               {t.callToOrder}
@@ -140,13 +175,28 @@ export function SiteNav({
           )}
         </div>
 
-        <div className="flex items-center gap-3 sm:hidden">
-          {localeSwitcher}
+        {/* Below-xl top bar: hamburger always here; toggle+CTA join it down
+            to ~460px (see the component note), below which they move into
+            the drawer instead so this row never runs out of room. */}
+        <div className="flex items-center gap-2 xl:hidden">
+          <div className="hidden items-center gap-2 min-[460px]:flex">
+            {localeSwitcher}
+            {phone && (
+              <a
+                href={`tel:${phone}`}
+                className="inline-block shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+                style={{ background: "var(--site-primary)" }}
+              >
+                {t.callToOrder}
+              </a>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? t.closeMenu : t.openMenu}
             aria-expanded={open}
+            className="shrink-0"
             style={{ color: "var(--site-primary)" }}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -158,14 +208,36 @@ export function SiteNav({
 
       {open && (
         <nav
-          className="flex flex-col gap-1 border-t px-6 py-3 text-sm sm:hidden"
-          style={{ borderColor: "var(--site-border)" }}
+          // Overlay, not in-flow (reported live: opening the drawer pushed
+          // the whole page down instead of floating over it). header is
+          // position:sticky, which already establishes a positioning
+          // context for an absolute descendant, so this anchors right below
+          // the header's own box without needing a new wrapper. Needs its
+          // own opaque background + shadow since it's no longer physically
+          // inside the header's painted box once positioned this way.
+          //
+          // right-6 + a fixed width, not inset-x-0 (reported live, 2nd
+          // round): a full-width bar with only the *text* right-aligned
+          // just left a big blank rectangle where the text used to start —
+          // the container itself was never actually narrower. This is a
+          // proper right-anchored dropdown card now, sized to its content
+          // rather than stretched edge to edge; right-6 lines its edge up
+          // with the hamburger button's own edge (matches the top bar's
+          // own px-6).
+          className="absolute right-6 top-full z-20 flex w-64 max-w-[calc(100vw-3rem)] max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto rounded-xl border p-2 text-sm shadow-lg xl:hidden"
+          style={{ borderColor: "var(--site-border)", background: "var(--site-bg)" }}
         >
+          {/* text-right, not the flex-col default of left: the hamburger
+              trigger and every top-bar element (toggle, CTA) live on the
+              right, so a left-hugging drawer list read as misaligned with
+              its own trigger (reported live via annotated screenshot).
+              Rows stay full-width (no items-end) so the tap target is still
+              the whole row, not just the shrunk label text. */}
           {!isHome && (
             <Link
               href="/"
               onClick={() => setOpen(false)}
-              className="rounded-md px-2 py-2 transition-colors hover:bg-black/5"
+              className="rounded-md px-2 py-2 text-right transition-colors hover:bg-black/5"
               style={{ color: "var(--site-text)" }}
             >
               {t.home}
@@ -176,17 +248,21 @@ export function SiteNav({
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className="rounded-md px-2 py-2 transition-colors hover:bg-black/5"
+              className="rounded-md px-2 py-2 text-right transition-colors hover:bg-black/5"
               style={{ color: "var(--site-text)" }}
             >
               {l.label}
             </Link>
           ))}
+
+          {/* Very-thin fallback: only rendered here (not the top bar) below
+              ~400px, so the toggle+CTA live in exactly one place at a time. */}
+          <div className="mt-2 flex justify-center min-[460px]:hidden">{localeSwitcher}</div>
           {phone && (
             <a
               href={`tel:${phone}`}
               onClick={() => setOpen(false)}
-              className="mt-2 rounded-md px-3 py-2 text-center font-semibold text-white"
+              className="mt-2 rounded-md px-3 py-2 text-center font-semibold text-white min-[460px]:hidden"
               style={{ background: "var(--site-primary)" }}
             >
               {t.callToOrder} — {phone}

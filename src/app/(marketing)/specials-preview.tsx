@@ -54,8 +54,12 @@ export function SpecialsPreview({
       >
         {hasSpecials ? (
           <>
+            {/* object-top, not the object-cover default of centered: the
+                rendered menu is much taller than this card, and the title/
+                date/letterhead live at the top — centering the crop cut that
+                off and started mid-list instead (reported live). */}
             {/* eslint-disable-next-line @next/next/no-img-element -- public Storage URL, not a local/optimizable asset */}
-            <img src={imageUrl} alt={`${restaurantName} — ${t.todaysSpecials}`} className="h-full w-full object-cover" />
+            <img src={imageUrl} alt={`${restaurantName} — ${t.todaysSpecials}`} className="h-full w-full object-cover object-top" />
             <div
               className="pointer-events-none absolute inset-x-0 bottom-10 h-10"
               style={{ background: "linear-gradient(to top, rgba(0,0,0,0.35), transparent)" }}

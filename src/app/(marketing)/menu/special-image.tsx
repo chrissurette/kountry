@@ -60,11 +60,18 @@ export function SpecialImage({
             role="dialog"
             aria-modal="true"
             aria-label={alt}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-0 sm:p-4"
             onClick={() => setOpen(false)}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- public Storage SVG URL */}
-            <img src={src} alt={alt} className="max-h-[95vh] max-w-[95vw] rounded-lg bg-white shadow-2xl" onClick={(e) => e.stopPropagation()} />
+            {/* Full width + vertical scroll, not force-fit-to-screen: a tall
+                menu (many sections) shrinking to fit entirely within one
+                mobile screen makes the text too small to read — scrolling a
+                full-width render is more legible than a small "whole thing
+                visible at once" image. */}
+            <div className="max-h-[100dvh] w-full max-w-2xl overflow-y-auto sm:max-h-[95vh] sm:rounded-lg" onClick={(e) => e.stopPropagation()}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- public Storage SVG URL */}
+              <img src={src} alt={alt} className="w-full bg-white shadow-2xl sm:rounded-lg" />
+            </div>
             <button
               type="button"
               onClick={() => setOpen(false)}

@@ -1,6 +1,8 @@
 # 07 — Phased Implementation Roadmap
 
-> **Note (2026-07-15):** Phases 0–2 below are an accurate historical record of what shipped and when, but two things they describe have since been superseded by owner's explicit calls — see CLAUDE.md's "Architecture pivot" and "Daily Specials image pipeline" notes: (1) the widget + hosted page (`/m/{slug}`) were built in Phase 1/3 and then fully removed once this app became the restaurant's own site; (2) the OCR-parse-to-text pipeline (Phase 1) was replaced with AI image generation for Daily Specials. Main Menu, Site Photos, and the full public marketing site (docs/06) were built outside this phase numbering, after Phase 2.
+> **Note (updated 2026-07-16):** Phases 0–2 below are an accurate historical record of what shipped and when, but two things they describe have since been superseded by owner's explicit calls — see CLAUDE.md's "Architecture pivot", "Daily Specials image pipeline", and "extract-and-render refactor" notes: (1) the widget + hosted page (`/m/{slug}`) were built in Phase 1/3 and then fully removed once this app became the restaurant's own site; (2) Phase 1's OCR-parse-to-text pipeline was replaced with AI image generation (2026-07-15) and then **again** with today's **"AI extracts, app draws"** design (2026-07-16) — a vision model reads the board into structured JSON, the owner edits it, and the app renders a deterministic SVG. Don't read "image generation" anywhere in this doc as current; the live pipeline generates no AI pixels.
+>
+> Built outside this phase numbering, after Phase 2: Main Menu, Site Photos, the full public marketing site (docs/06), the EN/ES translation of both the site and the employee-facing admin, and **Subscribers** (mailing-list capture, docs/03/04/06).
 
 ## Phase 0 — Foundation (week 1)
 Repo scaffold (Next.js 15 + TS + Tailwind), Supabase project, full schema + RLS policies from docs/03, Supabase Auth wiring, **restaurant profile record + Settings screen (identity + brand)**, PWA shell/installability.
@@ -29,6 +31,8 @@ The **provider abstraction is built now** (with one adapter behind it), includin
 
 ## Phase 4 — Hardening (week 10)
 Rate limiting on public + generate-image endpoints, error taxonomy surfaced in UI, backup/restore verification, accessibility pass on the public site.
+
+> **Known gap — CLOSED early (2026-07-16):** `POST /api/public/{slug}/subscribe` (and `POST /api/public/unsubscribe`) now have Postgres-backed fixed-window rate limiting (`bump_rate_limit()`, migration `20260706000030`, `src/lib/rate-limit.ts`) — keyed on an HMAC-hashed client IP (never stored raw, docs/09), fail-open so an opt-out can never be blocked by the limiter. Shipped ahead of Phase 4 as part of the subscribers hardening pass (see CLAUDE.md's dated note). This phase's remaining rate-limiting scope is the *generate/parse* endpoints, which are authenticated and lower-risk.
 
 ---
 
