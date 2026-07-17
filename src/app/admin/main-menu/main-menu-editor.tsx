@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { downscaleImage } from "@/lib/uploads/downscale";
+import { downscaleImageWithFormat, PUBLIC_PHOTO } from "@/lib/uploads/downscale";
 import type { MainMenuWithContent } from "@/lib/main-menu/service";
 import type { MainMenuCategory } from "@/types/database";
 
@@ -168,18 +168,25 @@ export function MainMenuEditor({ initialSections }: { initialSections: MainMenuW
     setMessage(null);
     setBusyImageKey(itemId);
     try {
-      const downscaled = await downscaleImage(file);
+      // Same PUBLIC_PHOTO policy as Site Photos — these render on the public
+      // /menu page, so they get WebP q90 + the immutable cache header too
+      // (they had neither until 2026-07-16).
+      const { file: downscaled, ext } = await downscaleImageWithFormat(file, PUBLIC_PHOTO);
 
       const targetRes = await fetch(`/api/main-menu/items/${itemId}/image`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ext: "jpg" }),
+        body: JSON.stringify({ ext }),
       });
       if (!targetRes.ok) throw new Error("Could not prepare the upload.");
       const { path, token } = await targetRes.json();
 
       const supabase = createClient();
-      const { error: uploadError } = await supabase.storage.from("site-media").uploadToSignedUrl(path, token, downscaled);
+      // Immutable: item-image paths are UUID-unique, so a replacement is
+      // always a new URL and a cached copy can never go stale.
+      const { error: uploadError } = await supabase.storage
+        .from("site-media")
+        .uploadToSignedUrl(path, token, downscaled, { cacheControl: "31536000" });
       if (uploadError) throw uploadError;
 
       await fetch(`/api/main-menu/items/${itemId}/image/confirm`, { method: "POST" });

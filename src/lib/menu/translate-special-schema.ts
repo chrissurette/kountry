@@ -150,16 +150,31 @@ export const specialTranslationResponseSchema = z.object({
 });
 
 export function buildSpecialTranslationPrompt(units: TranslatableUnit[]): string {
+  // Same dialect + glossary as Main Menu's buildTranslationPrompt
+  // (src/lib/main-menu/translate-schema.ts) — set 2026-07-16 after a native
+  // Latino reviewer found the unconstrained pass confusing. Keep the two in sync.
   return [
     "Translate the following restaurant daily-specials board text from English to natural,",
-    "appetizing Spanish, as it would read on a specials board in a Spanish-speaking",
-    "restaurant in the United States.",
+    "appetizing LATIN AMERICAN Spanish — Cuban / Puerto Rican / South American, NOT Mexican",
+    "and NOT European Spanish — as it would read on a bilingual diner's specials board in Florida.",
+    "",
+    "Fixed glossary (always use exactly these):",
+    "- bacon = tocineta (never tocino/beicon) · pork = puerco · peanut = maní",
+    "- green beans = habichuelas tiernas · beets = remolachas · peach = melocotón",
+    "- eggs any style = al gusto; scrambled = revueltos; sunny side up = fritos;",
+    "  over-easy/-medium/-hard = fritos por ambos lados con yema blanda / media / dura (never volteados/virados)",
+    "- sausage patty = tortita de salchicha · sausage link = salchicha",
+    "- grilled (diner flat-top) = a la plancha · choose = escoger · add = agregar (never añadir)",
+    "Keep these iconic US menu words in English, untranslated: grits, hash browns,",
+    "biscuit (NEVER galleta or bizcocho), gravy, waffle (never gofre), bagel, sub, wrap,",
+    "BLT, Grilled Cheese, Hot Dog, Corned Beef Hash. home fries = papas caseras;",
+    "toast = pan tostado; sweet potato = batata.",
     "",
     "Rules:",
     "- Return one entry per input id, with that exact same id.",
     '- Do not translate or alter numbers, prices, or abbreviations like "MP".',
-    "- Keep proper nouns and dish names already commonly used in English as-is unless a",
-    "  Spanish name is clearly more natural.",
+    "- Lists must keep EXACTLY as many options as the English — never merge or drop an item",
+    "  from an enumeration.",
     "- Keep translations concise — board copy, not full sentences where the English wasn't either.",
     '- Use normal word spacing — never run words together (write "Pollo y Ñoquis", never "Pollo yÑoquis").',
     "",

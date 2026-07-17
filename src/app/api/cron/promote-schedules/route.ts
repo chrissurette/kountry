@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerEnv } from "@/lib/env";
 import { clearStaleLiveSpecials, revalidatePublicMenuSurfaces } from "@/lib/publish/service";
+import { postToSocialTargets } from "@/lib/social/targets-service";
+import type { PublishedSnapshot } from "@/types/database";
 
 /**
  * Polled every minute by a Netlify Scheduled Function (netlify/functions/
@@ -58,7 +60,7 @@ export async function GET(request: Request) {
 
     const { data: snapshot } = await admin
       .from("published_snapshots")
-      .select("menu_id")
+      .select("*")
       .eq("id", schedule.snapshot_id)
       .maybeSingle();
     if (snapshot?.menu_id) {
@@ -66,6 +68,15 @@ export async function GET(request: Request) {
     }
 
     revalidatePublicMenuSurfaces();
+
+    // Crosspost to Facebook/Instagram (docs/10) — the same hook publishMenuNow
+    // runs, so a scheduled special reaches social too. It posts the JPEG URLs
+    // frozen into the snapshot at approval time (there's no browser here to
+    // compose them), never throws, and each Graph call is capped at 5s so a
+    // hanging Meta can't eat this per-minute function's runtime budget.
+    if (snapshot) {
+      await postToSocialTargets(admin, schedule.restaurant_id, snapshot as PublishedSnapshot);
+    }
 
     promoted++;
   }

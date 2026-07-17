@@ -6,15 +6,22 @@ import { SettingsForm } from "./settings-form";
 import { ProvidersPanel } from "./providers-panel";
 import { AccountPanel } from "./account-panel";
 import { EmployeePanel } from "./employee-panel";
+import { SocialPanel } from "./social-panel";
 import { listEmployeeAccounts } from "@/lib/restaurant/employees-service";
+import { listPublishTargets, listRecentSocialPosts } from "@/lib/social/targets-service";
+import { metaAppCredentials } from "@/lib/env";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ social?: string }> }) {
   const supabase = await createClient();
-  const [restaurant, credentials, taskConfig] = await Promise.all([
-    getRestaurantProfile(supabase),
-    listCredentials(supabase),
-    listTaskConfig(supabase),
-  ]);
+  const [restaurant, credentials, taskConfig, socialTargets, recentSocialPosts, { social: socialFlag }] =
+    await Promise.all([
+      getRestaurantProfile(supabase),
+      listCredentials(supabase),
+      listTaskConfig(supabase),
+      listPublishTargets(supabase),
+      listRecentSocialPosts(supabase),
+      searchParams,
+    ]);
   const imageGenConfig = taskConfig.find((t) => t.task === "image_gen");
 
   const {
@@ -47,6 +54,16 @@ export default async function SettingsPage() {
         <ProvidersPanel
           initialCredentials={credentials}
           initialImageGenConfig={{ provider: imageGenConfig?.provider ?? "openai", model: imageGenConfig?.model ?? "gpt-image-1" }}
+        />
+      </div>
+      {/* Beside AI Providers (owner's placement call, docs/10) — same idea:
+          the owner connecting their own third-party account to this app. */}
+      <div className="mt-6">
+        <SocialPanel
+          targets={socialTargets}
+          recentPosts={recentSocialPosts}
+          configured={metaAppCredentials() !== null}
+          statusFlag={socialFlag ?? null}
         />
       </div>
     </div>

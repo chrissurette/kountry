@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { renderSpecialMenuSvg } from "@/lib/menu/render-special-menu-svg";
 import { MENU_THEMES, getMenuTheme } from "@/lib/menu/special-menu-themes";
 import { hasMeaningfulContent, type DailySpecialMenu } from "@/lib/menu/special-menu-schema";
+import { canShareImageFiles, saveSpecialImage, specialImageFilename } from "@/lib/menu/save-special-image";
+import { composeSocialImages } from "@/lib/social/compose-social-images";
+import { createClient } from "@/lib/supabase/client";
 import type { PublishSchedule } from "@/types/database";
 import type { Locale } from "@/lib/i18n/locale";
 import { getDictionary, type Dictionary } from "@/lib/i18n/dictionary";
@@ -24,6 +27,25 @@ function priceField() {
 /** Spanish field — amber-tinted, matching the Main Menu editor's convention so a Spanish input is never mistaken for the English one next to it. */
 function esField() {
   return "w-full rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-sm focus:border-amber-500 focus:outline-none";
+}
+
+/**
+ * Whether this device can share image files — i.e. whether the button should
+ * say "Save to camera roll" (phone/tablet share sheet) or "Save image"
+ * (desktop download).
+ *
+ * useSyncExternalStore, not useState+useEffect: `navigator` doesn't exist
+ * during SSR, and setState-in-an-effect is rejected outright by this
+ * project's React Compiler lint (react-hooks/set-state-in-effect) — the same
+ * family of lint quirks CLAUDE.md already records. This is exactly what
+ * useSyncExternalStore is for: read a browser capability, with an explicit
+ * server snapshot. The capability can't change mid-session, so subscribe is a
+ * no-op; `false` on the server means the pre-hydration paint never promises a
+ * camera roll the browser can't deliver.
+ */
+const noopSubscribe = () => () => {};
+function useCanShareFiles(): boolean {
+  return useSyncExternalStore(noopSubscribe, canShareImageFiles, () => false);
 }
 
 function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
@@ -130,6 +152,11 @@ export function ReviewSpecialClient({
   const [renderedUrlEs, setRenderedUrlEs] = useState<string | null>(initialImageUrlEs);
   const [showSpanish, setShowSpanish] = useState(false);
   const [translating, setTranslating] = useState(false);
+
+  // Which language's image is being prepared, so the busy label lands on the
+  // button that was actually clicked (and the other stays readable).
+  const [savingImage, setSavingImage] = useState<Locale | null>(null);
+  const canShareFiles = useCanShareFiles();
 
   const previewDataUrl = useMemo(() => {
     if (!special) return null;
@@ -276,10 +303,11 @@ export function ReviewSpecialClient({
     setRendering(true);
     setMessage(null);
     try {
+      const social = await composeAndUploadSocialImages();
       const res = await fetch(`/api/menus/${menuId}/render-special`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ menu: special, themeId, menuEs: specialEs }),
+        body: JSON.stringify({ menu: special, themeId, menuEs: specialEs, ...social }),
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
@@ -293,6 +321,80 @@ export function ReviewSpecialClient({
       setMessage(err instanceof Error ? err.message : t.errorRender);
     } finally {
       setRendering(false);
+    }
+  }
+
+  /**
+   * Composes the Facebook/Instagram JPEGs from the English preview and uploads
+   * them, returning their storage paths for the render call (docs/10). Meta
+   * can't consume our SVG — IG is JPEG-only inside a 4:5–1.91:1 ratio — and
+   * this has to happen in the browser because the SVG uses system fonts that
+   * a Netlify function doesn't have.
+   *
+   * **Never throws.** Social crossposting is a bonus; a menu render must not
+   * fail because a canvas hiccuped. On failure the paths are simply absent,
+   * the columns keep whatever they had, and the publish hook skips those
+   * targets with a visible reason rather than posting something wrong.
+   *
+   * Always English: a social post is one post, and `special_data` is the
+   * canonical board (the site itself serves both languages).
+   */
+  async function composeAndUploadSocialImages(): Promise<{ socialImagePath?: string; socialImageIgPath?: string }> {
+    if (!previewDataUrl) return {};
+    try {
+      const { facebook, instagram } = await composeSocialImages(previewDataUrl, getMenuTheme(themeId).background);
+
+      const targetRes = await fetch(`/api/menus/${menuId}/social-images`, { method: "POST" });
+      if (!targetRes.ok) throw new Error("could not get upload targets");
+      const targets = await targetRes.json();
+
+      const supabase = createClient();
+      const [fb, ig] = await Promise.all([
+        supabase.storage
+          .from("site-media")
+          .uploadToSignedUrl(targets.facebook.path, targets.facebook.token, facebook, {
+            contentType: "image/jpeg",
+            cacheControl: "31536000",
+          }),
+        supabase.storage
+          .from("site-media")
+          .uploadToSignedUrl(targets.instagram.path, targets.instagram.token, instagram, {
+            contentType: "image/jpeg",
+            cacheControl: "31536000",
+          }),
+      ]);
+      if (fb.error || ig.error) throw fb.error ?? ig.error;
+
+      return { socialImagePath: targets.facebook.path, socialImageIgPath: targets.instagram.path };
+    } catch (err) {
+      console.error("social image compose/upload failed (menu still renders):", err);
+      return {};
+    }
+  }
+
+  /**
+   * Rasterizes a rendered preview to PNG and hands it to the device — share
+   * sheet ("Save Image" → camera roll) on a phone/tablet, download on desktop.
+   * `which` picks the English or Spanish board; both are saved from their own
+   * preview, so a translated special can be posted in either language.
+   *
+   * Safe to rasterize the *preview* rather than refetching the stored
+   * artifact: the buttons are gated on `canPublish`, i.e. rendered and not
+   * dirty, and in that state each preview is byte-identical to what published
+   * (the renderer is pure — CLAUDE.md). Translating sets dirty, so a
+   * not-yet-rendered translation can't be saved.
+   */
+  async function saveImageToDevice(which: Locale) {
+    const dataUrl = which === "es" ? previewDataUrlEs : previewDataUrl;
+    if (!dataUrl) return;
+    setSavingImage(which);
+    setMessage(null);
+    try {
+      await saveSpecialImage(dataUrl, specialImageFilename(which));
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : t.publishBar.saveImageError);
+    } finally {
+      setSavingImage(null);
     }
   }
 
@@ -465,6 +567,10 @@ export function ReviewSpecialClient({
           onPublish={publishNow}
           onSchedule={schedulePublish}
           onCancelSchedule={cancelSchedule}
+          onSaveImage={saveImageToDevice}
+          savingImage={savingImage}
+          canShareFiles={canShareFiles}
+          canSaveSpanish={!!previewDataUrlEs && !!renderedUrlEs}
           t={t.publishBar}
         />
 
@@ -787,6 +893,10 @@ function PublishBar({
   onPublish,
   onSchedule,
   onCancelSchedule,
+  onSaveImage,
+  savingImage,
+  canShareFiles,
+  canSaveSpanish,
   t,
 }: {
   canPublish: boolean;
@@ -798,6 +908,12 @@ function PublishBar({
   onPublish: () => void;
   onSchedule: () => void;
   onCancelSchedule: () => void;
+  /** Omitted by the legacy image-gen path, which has no client-rendered SVG to rasterize — no button renders there. */
+  onSaveImage?: (which: Locale) => void;
+  savingImage?: Locale | null;
+  canShareFiles?: boolean;
+  /** True once a Spanish translation is rendered and saved — adds a second save button and language-tags both. */
+  canSaveSpanish?: boolean;
   t: Dictionary["admin"]["review"]["publishBar"];
 }) {
   if (schedule) {
@@ -822,6 +938,36 @@ function PublishBar({
         >
           {status === "busy" ? t.publishing : t.publishNow}
         </button>
+        {/* Same gate as Publish (rendered && !dirty): what you save is exactly
+            what goes live, never a half-edited draft. The Spanish button only
+            appears once a translation is actually rendered; when it does, both
+            get an (EN)/(ES) tag — the same language tokens as the admin nav's
+            pill, so they need no translation of their own. With no Spanish
+            render there's nothing to disambiguate, so the tag is omitted. */}
+        {onSaveImage && (
+          <button
+            type="button"
+            onClick={() => onSaveImage("en")}
+            disabled={!!savingImage || !canPublish}
+            className="rounded-md border border-neutral-800 px-4 py-2 text-sm font-medium text-neutral-900 disabled:opacity-50"
+          >
+            {savingImage === "en"
+              ? t.savingImage
+              : `${canShareFiles ? t.saveToCameraRoll : t.saveImage}${canSaveSpanish ? " (EN)" : ""}`}
+          </button>
+        )}
+        {onSaveImage && canSaveSpanish && (
+          <button
+            type="button"
+            onClick={() => onSaveImage("es")}
+            disabled={!!savingImage || !canPublish}
+            className="rounded-md border border-amber-500 px-4 py-2 text-sm font-medium text-amber-900 disabled:opacity-50"
+          >
+            {savingImage === "es"
+              ? t.savingImage
+              : `${canShareFiles ? t.saveToCameraRoll : t.saveImage} (ES)`}
+          </button>
+        )}
         <input type="datetime-local" value={scheduleAt} onChange={(e) => setScheduleAt(e.target.value)} className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm" />
         <button type="button" onClick={onSchedule} disabled={status === "busy" || !canPublish || !scheduleAt} className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium disabled:opacity-50">
           {t.schedule}

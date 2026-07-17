@@ -172,6 +172,12 @@ export default async function PrivacyPolicyPage() {
             dishes and prices, and translates our menu text into Spanish. It never receives your email address,
             phone number, or anything else you give us.
           </li>
+          <li>
+            <strong>Meta (Facebook and Instagram)</strong> — if we&apos;ve connected our Facebook Page and Instagram
+            account, publishing a daily special also posts that menu picture to them. That sends our own menu and
+            nothing about you; anything you then do on Facebook or Instagram is between you and Meta, under their
+            privacy policy.
+          </li>
         </ul>
       </Section>
 

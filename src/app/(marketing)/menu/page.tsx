@@ -67,6 +67,70 @@ function localizeNullable(locale: Locale, en: string | null, es: string | null):
   return locale === "es" && es ? es : en;
 }
 
+/**
+ * A section's blurb. Two shapes come through this, and they want very
+ * different typography:
+ *
+ *  - Plain prose ("Served with Garlic Bread and choice of Side Salad…") —
+ *    reads fine as a sentence, so it stays one centered line of italic.
+ *  - Prose + a run of add-ons/upgrades separated by " · " ("…Upgrades for any
+ *    of these: Bagel or English Muffin instead of toast or biscuit $1 ·
+ *    Pancake instead of toast or biscuit $2 · …"). As one paragraph that's a
+ *    six-line wall nobody scans — you can't find "does it cost extra for hash
+ *    browns?" in it. Each add-on becomes its own chip instead, so the eye can
+ *    land on one.
+ *
+ * The " · " separator in the description text is therefore load-bearing, not
+ * decoration: it's the signal that turns a paragraph into a chip row. A
+ * description with no " · " renders exactly as before.
+ */
+function SectionDescription({ text }: { text: string }) {
+  const parts = text.split(" · ");
+  if (parts.length === 1) {
+    return (
+      <p className="mx-auto mb-5 max-w-2xl text-center text-sm italic" style={{ color: "var(--site-muted)" }}>
+        {text}
+      </p>
+    );
+  }
+
+  // The first add-on is glued to the intro ("…for any of these: Bagel … $1"),
+  // since the label and the list share a sentence. Split at the label's colon
+  // to free it — no colon just means the whole run is chips.
+  const [head, ...rest] = parts;
+  const colon = head.lastIndexOf(": ");
+  const lead = colon > -1 ? head.slice(0, colon + 1) : null;
+  const chips = [colon > -1 ? head.slice(colon + 2) : head, ...rest]
+    // The run is written as one sentence, so the final add-on carries the
+    // sentence's full stop ("…Egg Whites Only $1.50."). A chip isn't a
+    // sentence — drop it. Only a *trailing* dot goes; prices keep theirs.
+    .map((chip) => chip.trim().replace(/\.$/, ""));
+
+  return (
+    <div className="mb-5">
+      {lead && (
+        <p className="mx-auto max-w-2xl text-center text-sm italic" style={{ color: "var(--site-muted)" }}>
+          {lead}
+        </p>
+      )}
+      {/* Wider than the prose above it on purpose: chips are discrete, so
+          extra width just means fewer rows — it doesn't hurt readability the
+          way an over-long line of prose would. */}
+      <ul className={`mx-auto flex max-w-3xl flex-wrap justify-center gap-1.5 text-xs ${lead ? "mt-2" : ""}`}>
+        {chips.map((chip, i) => (
+          <li
+            key={i}
+            className="rounded-full border px-2.5 py-1"
+            style={{ borderColor: "var(--site-border)", background: "var(--site-surface)", color: "var(--site-text)" }}
+          >
+            {chip}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function MenuSection({ section, currency, locale }: { section: PublicMainMenuSection; currency: string; locale: Locale }) {
   const description = localizeNullable(locale, section.description, section.descriptionEs);
   return (
@@ -74,11 +138,7 @@ function MenuSection({ section, currency, locale }: { section: PublicMainMenuSec
       <h3 className="font-site-heading mb-1 text-center text-2xl font-semibold" style={{ color: "var(--site-primary)" }}>
         {localize(locale, section.name, section.nameEs)}
       </h3>
-      {description && (
-        <p className="mx-auto mb-5 max-w-xl text-center text-sm italic" style={{ color: "var(--site-muted)" }}>
-          {description}
-        </p>
-      )}
+      {description && <SectionDescription text={description} />}
       {!description && <div className="mb-5" />}
       <div className="flex flex-col gap-5">
         {section.items.map((item, j) => (
@@ -156,10 +216,21 @@ export default async function MenuPage() {
         // keeps the bar's height constant at every breakpoint, so the fixed
         // scroll-mt offset is always correct. no-scrollbar (globals.css)
         // keeps native touch/wheel scrolling without a visible track.
+        // Two layers, deliberately: the border/background pill is the OUTER
+        // element and the scroll+fade strip is INSIDE it. When both lived on
+        // one element, the .scroll-fade-x mask faded the pill's own border to
+        // transparent at the left/right edges (reported live: the ring looked
+        // "clear"/cut at both ends even at desktop, where nothing scrolls).
+        // The mask now only touches the chips, so the ring is continuous.
         <nav
-          className="no-scrollbar scroll-fade-x sticky top-14 z-20 mx-auto mt-8 flex w-fit max-w-full flex-nowrap items-center gap-0 overflow-x-auto rounded-full border px-0.5 py-1 text-xs backdrop-blur md:gap-2 md:px-2 md:py-2 md:text-sm"
+          className="sticky top-14 z-20 mx-auto mt-8 w-fit max-w-full rounded-full border py-1 text-xs backdrop-blur md:py-2 md:text-sm"
           style={{ borderColor: "var(--site-border)", background: "color-mix(in srgb, var(--site-bg) 90%, transparent)" }}
         >
+        {/* The horizontal padding lives HERE, inside the mask, not on the nav:
+            the 20px fade is sized to land within this padding + the chips' own,
+            so at widths where nothing overflows the fade dies out before any
+            text starts (the original calibration, preserved across the split). */}
+        <div className="no-scrollbar scroll-fade-x flex max-w-full flex-nowrap items-center gap-0 overflow-x-auto px-0.5 md:gap-2 md:px-2">
           {/* Compact below md (phones only — a real tablet at 768px+ has
               plenty of room even at full size, measured live) so all jump
               links — including a 4th/5th category like Beverages — are more
@@ -184,6 +255,7 @@ export default async function MenuPage() {
               {l.label}
             </a>
           ))}
+        </div>
         </nav>
       )}
 

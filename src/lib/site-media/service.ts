@@ -71,6 +71,17 @@ export async function updateSiteMediaCaption(supabase: SupabaseClient, id: strin
   if (error) throw error;
 }
 
+/**
+ * Removes the site_media row for a storage path, without touching Storage —
+ * used when the confirm step rejects a policy-violating upload and has
+ * already deleted the object itself (src/lib/uploads/verify-stored-photo.ts).
+ * Leaving the row would render a broken tile pointing at a deleted file.
+ */
+export async function deleteSiteMediaByPath(supabase: SupabaseClient, path: string): Promise<void> {
+  const { error } = await supabase.from("site_media").delete().eq("storage_path", path);
+  if (error) throw error;
+}
+
 export async function deleteSiteMedia(supabase: SupabaseClient, id: string): Promise<void> {
   const { data: row, error: fetchError } = await supabase
     .from("site_media")

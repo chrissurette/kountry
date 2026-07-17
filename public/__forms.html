@@ -2,17 +2,18 @@
 <!--
   Netlify Forms detection file — NOT a page anyone visits. Netlify's build
   scanner only registers forms it finds in static HTML, and on the Next.js
-  runtime every real page is a server-rendered function it can't see, so this
-  hidden definition (Netlify's documented Next.js workaround) is what makes
-  the "email-fax-list" form exist on the Netlify side. The real form lives at
-  /email-fax-list; its API route server-side-forwards each saved submission
-  here as a url-encoded POST so Netlify records it and fires the owner's
-  email notification. Field names below must stay in sync with what
-  src/app/api/public/[slug]/email-fax-list/route.ts forwards.
+  runtime every real page is a server-rendered function it can't see, so the
+  hidden definitions below (Netlify's documented Next.js workaround) are what
+  make these forms exist on the Netlify side. Field names must stay in sync
+  with the code that posts to them:
+    email-fax-list — src/app/api/public/[slug]/email-fax-list/route.ts
+                     (each saved daily-special delivery request)
+    ai-alert       — src/lib/rate-limit.ts sendAiSpendAlertOnce()
+                     (the AI runaway-spend guards tripped; max 1/day)
 
-  Requires "form detection" to be enabled once in the Netlify UI
-  (Site configuration -> Forms), and the notification email configured there
-  (Forms -> Form notifications) after the first deploy that includes this file.
+  Requires "form detection" enabled once in the Netlify UI (Site
+  configuration -> Forms), and a notification email configured PER FORM
+  (Forms -> Form notifications) after the first deploy that includes it.
 -->
 <html lang="en">
   <head><meta charset="utf-8" /><title>Form definitions</title></head>
@@ -24,6 +25,12 @@
       <input type="email" name="email" />
       <input type="text" name="days" />
       <textarea name="notes"></textarea>
+    </form>
+    <form name="ai-alert" data-netlify="true" hidden>
+      <input type="text" name="alert_type" />
+      <input type="text" name="spent_today" />
+      <input type="text" name="detail" />
+      <input type="text" name="happened_at" />
     </form>
   </body>
 </html>

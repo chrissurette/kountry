@@ -20,7 +20,9 @@ export function buildMenuSnapshotPayload(
   theme: Pick<Theme, "key" | "config">,
   styleOverrides?: Partial<BrandConfig>,
   imageUrl?: string | null,
-  imageUrlEs?: string | null
+  imageUrlEs?: string | null,
+  /** Social crosspost JPEGs (docs/10), frozen in here so a *scheduled* publish posts exactly what was approved — the cron has no browser to re-compose them at fire time. */
+  socialImages?: { imageUrl?: string | null; imageIgUrl?: string | null }
 ): MenuSnapshotPayload {
   return {
     restaurant: {
@@ -48,6 +50,8 @@ export function buildMenuSnapshotPayload(
       })),
       imageUrl: imageUrl ?? null,
       imageUrlEs: imageUrlEs ?? null,
+      socialImageUrl: socialImages?.imageUrl ?? null,
+      socialImageIgUrl: socialImages?.imageIgUrl ?? null,
     },
     theme: {
       key: theme.key,

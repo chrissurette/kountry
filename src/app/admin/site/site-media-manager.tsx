@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { downscaleImage } from "@/lib/uploads/downscale";
+import { downscaleImageWithFormat, PUBLIC_PHOTO } from "@/lib/uploads/downscale";
 
 interface MediaItem {
   id: string;
@@ -14,24 +14,44 @@ interface MediaItem {
 
 /** Shared upload flow for both sections — same signed-upload-URL pattern as the menu capture screen. */
 async function uploadFile(kind: "hero" | "gallery", file: File): Promise<void> {
-  const downscaled = await downscaleImage(file);
+  // PUBLIC_PHOTO = the one shared policy for anything shown to visitors:
+  // WebP q90 ("visually lossless"), ≤1600px, JPEG fallback on Safari/iPad.
+  // `ext` is what the encoder actually produced, never an assumption.
+  const { file: downscaled, ext } = await downscaleImageWithFormat(file, PUBLIC_PHOTO);
 
   const targetRes = await fetch("/api/site-media", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ kind, ext: "jpg" }),
+    body: JSON.stringify({ kind, ext }),
   });
   if (!targetRes.ok) throw new Error("Could not prepare the upload.");
   const { path, token } = await targetRes.json();
 
   const supabase = createClient();
-  const { error } = await supabase.storage.from("site-media").uploadToSignedUrl(path, token, downscaled);
+  // cacheControl is seconds; one year + the CDN treating it as immutable is
+  // correct here because paths are UUID-unique — replacing or re-uploading a
+  // photo always mints a NEW path, so a cached URL can never go stale, and
+  // the 2026-07-16 audit found the old uploads shipping `no-cache` (every
+  // visitor re-downloaded every photo, every visit).
+  const { error } = await supabase.storage
+    .from("site-media")
+    .uploadToSignedUrl(path, token, downscaled, { cacheControl: "31536000" });
   if (error) throw error;
 
   // The public site is ISR'd — revalidate now that the file has actually
   // landed in Storage (not right after POST /api/site-media, which only
-  // issues the signed URL and would race this upload).
-  await fetch("/api/site-media/confirm", { method: "POST" });
+  // issues the signed URL and would race this upload). This step also
+  // server-verifies the stored file against the photo policy and 422s if it
+  // doesn't comply, so surface that message rather than silently succeeding.
+  const confirmRes = await fetch("/api/site-media/confirm", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ path }),
+  });
+  if (!confirmRes.ok) {
+    const data = await confirmRes.json().catch(() => null);
+    throw new Error(data?.error ?? "The photo could not be saved.");
+  }
 }
 
 export function SiteMediaManager({

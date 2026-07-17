@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkAiRateLimit, sendAiSpendAlertOnce } from "@/lib/rate-limit";
 import { decryptProviderKey } from "./crypto";
 import { createGeminiAdapter } from "./gemini";
 import { createOpenAiAdapter } from "./openai";
@@ -69,6 +70,29 @@ async function getCredential(restaurantId: string, provider: ProviderId) {
  * normal feature call uses — never construct an adapter directly (docs/05).
  */
 export async function resolveTask(restaurantId: string, task: ProviderTask): Promise<TaskResolution> {
+  // Runaway-spend guard (2026-07-16, owner's ask): every AI call resolves
+  // through here (docs/05's rule), so this one check caps retry loops, stuck
+  // clients, and buggy cycles on the owner's own API keys — including
+  // server-internal callers no route-level limiter would ever see. Sized to
+  // be invisible in real use; see AI_LIMITS in src/lib/rate-limit.ts.
+  // Deliberately BEFORE the credential fetch/decrypt: a denied call should do
+  // no work and touch no key material.
+  const rate = await checkAiRateLimit(restaurantId, task);
+  if (!rate.allowed) {
+    // Tell the OWNER, not just the caller — during a genuine runaway loop the
+    // caller is a script that ignores 429s, and the human who pays the API
+    // bill may be nowhere near this request. One email per day (deduped
+    // inside), never blocks or fails the denial itself.
+    await sendAiSpendAlertOnce(restaurantId, rate.reason ?? "task");
+    const message =
+      rate.reason === "budget"
+        ? "The AI features have reached today's $5 spending limit and are paused as a precaution until tomorrow. The usage dashboard in Settings → AI Providers shows what was spent — if today's numbers surprise you, something may be calling the AI in a loop."
+        : rate.reason === "total"
+          ? "The AI features have made an unusually large number of requests in the last hour and have been paused as a precaution. Try again in an hour — if you didn't expect this, something may be stuck in a retry loop."
+          : "This AI feature has been used an unusually large number of times in the last hour and has been paused as a precaution. Try again in an hour.";
+    throw new ProviderError(message, "rate_limited");
+  }
+
   const admin = createAdminClient();
 
   const { data: taskConfig } = await admin

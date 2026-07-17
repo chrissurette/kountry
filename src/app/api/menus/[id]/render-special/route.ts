@@ -10,6 +10,11 @@ const requestSchema = z.object({
   menu: dailySpecialMenuSchema,
   themeId: z.string(),
   menuEs: dailySpecialMenuSchema.nullable().optional(),
+  // Paths of the social JPEGs the browser composed + uploaded just before
+  // this call (docs/10). Optional — a browser that couldn't compose them
+  // still renders and publishes normally, it just can't crosspost.
+  socialImagePath: z.string().nullable().optional(),
+  socialImageIgPath: z.string().nullable().optional(),
 });
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +32,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       menu: parsed.data.menu,
       themeId: parsed.data.themeId,
       menuEs: parsed.data.menuEs,
+      socialImagePath: parsed.data.socialImagePath,
+      socialImageIgPath: parsed.data.socialImageIgPath,
     });
     return NextResponse.json(result);
   } catch (err) {

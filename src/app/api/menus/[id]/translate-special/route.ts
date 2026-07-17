@@ -29,6 +29,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ menu });
   } catch (err) {
     if (err instanceof NoRestaurantError) return NextResponse.json({ error: err.message }, { status: 404 });
+    if (err instanceof ProviderError && err.code === "rate_limited")
+      return NextResponse.json({ error: err.message }, { status: 429 });
     if (err instanceof ProviderError) return NextResponse.json({ error: err.message }, { status: 422 });
     return NextResponse.json({ error: "Translation failed." }, { status: 500 });
   }

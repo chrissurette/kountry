@@ -153,7 +153,23 @@ email_fax_requests   -- daily-special delivery requests from the public /email-f
 - **JSONB vs relational:** `brand`, `menu_defaults`, `hours`, `style_overrides`, and theme `config` are JSONB because their shape will evolve. Everything queried/joined (menus, sections, items, snapshots, library, usage) is properly relational.
 - **Prices:** integer `price_cents` + free-text `price_note` — handwritten menus need the "market price" / "12/18" escape hatch. Never store floats.
 - **Snapshots are self-contained:** `payload` embeds everything needed to render (including resolved brand tokens and theme config), so old snapshots render identically even after profile/theme edits.
-- **RLS:** every policy is `restaurant_id IN (SELECT restaurant_id FROM restaurant_members WHERE user_id = auth.uid())`. Public read access only via server-side service role on the snapshot pointed to by `live_snapshot_id`. **Deliberate exceptions (2026-07-16):** `subscribers` and `email_fax_requests` add `AND role = 'owner'` to that subquery — customer-PII tables get DB-level defense in depth on top of the middleware role gate, the places the project's "role boundary lives in the middleware" pattern has the least margin (docs/09, migrations `20260706000029`/`..031`; the exception is for PII tables specifically, not a new default) — and `rate_limit_counters` has RLS enabled with *no* policies at all (service-role only; it also carries no `restaurant_id`, since a rate counter is keyed by client, not by tenant — infrastructure, not restaurant data, so design rule #2's multi-tenant seam doesn't apply to it).
+- **RLS:** the *default* policy is `restaurant_id IN (SELECT restaurant_id FROM restaurant_members WHERE user_id = auth.uid())` — any member, with the owner/employee split enforced by the middleware rather than the database. Public read access only via server-side service role on the snapshot pointed to by `live_snapshot_id`.
+
+  **Owner-only exceptions (`AND role = 'owner'`), all 2026-07-16.** These are deliberate, and the list is closed — adding to it should be a conscious decision, not a reflex:
+
+  | Table | Migration | Why it earned the exception |
+  |---|---|---|
+  | `subscribers` | `..029` | Customer PII (emails/phones) |
+  | `email_fax_requests` | `..031` | Customer PII (names, fax/email, free-text notes) |
+  | `publish_targets`, `social_posts` | `..032` | A live credential that can post publicly as the restaurant |
+  | `main_menu_sections`, `main_menu_items` | `..033` | Owner-controlled **live public site content** |
+  | `restaurants` — **UPDATE only** | `..033` | Same: the profile *is* the public site |
+
+  The `..033` pair came from an **employee-access audit that found the middleware was the only thing stopping an employee from editing the Main Menu and the restaurant profile** straight from browser dev tools — both of which render on the live public site. Verified after the fact with real signed-in JWTs: an employee now reads 0 main-menu rows and is refused on insert (including via `replace_main_menu`, which is `security invoker`, so policies apply to the RPC too — there is no bypass).
+
+  **`restaurants` SELECT stays member-level, deliberately — do not "finish the job".** The employee's own work reads that row: `current-restaurant.ts` (the `/admin` layout; without it every employee screen degrades to the "no restaurant linked" dead end), the standardized letterhead at parse *and* render time, and `createSnapshot`'s payload freeze. Nothing is protected by hiding it either — the profile's address, phone and hours are published on every page of the public site. The risk was only ever unauthorized *edits*.
+
+  **`rate_limit_counters`** has RLS enabled with *no* policies at all (service-role only; it also carries no `restaurant_id`, since a rate counter is keyed by client, not by tenant — infrastructure, not restaurant data, so design rule #2's multi-tenant seam doesn't apply to it).
 - **Item library matching:** start with `pg_trgm` trigram similarity (cheap, no embedding calls). pgvector is a possible later upgrade, not part of the current plan.
 - **Main Menu vs. Daily Specials (added 2026-07-14):** `main_menu_sections`/`main_menu_items` are the permanent menu — hand-typed by staff in `/admin/main-menu`, tied directly to `restaurant_id`, always live with no draft/publish/snapshot lifecycle (same "direct edit, immediately live" model as the `restaurants` profile itself, since it changes rarely). This is deliberately separate from `menus`/`menu_sections`/`menu_items`, which is now scoped to **Daily Specials only** — the AI capture → parse → review → publish pipeline. The public `/menu` page renders both: the Main Menu, then a "Today's Specials" section from the live snapshot if one is published.
 - **`assets.content_hash`:** parse results are cached against the photo hash so re-opening the review screen never re-bills the vision API.

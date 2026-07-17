@@ -129,6 +129,10 @@ export interface Menu {
   special_data_es: unknown | null;
   /** Storage path (site-media bucket) of the Spanish-rendered `.svg`, same renderer/theme as generated_image_path fed different (translated) text. Null until the owner translates and saves. */
   generated_image_path_es: string | null;
+  /** Storage path of the natural-ratio JPEG for Facebook crossposting (2026-07-16, docs/10) — composed in the browser at render time, since Meta can't consume our SVG. Null on renders predating the feature. */
+  social_image_path: string | null;
+  /** Storage path of the 4:5 (1080x1350) padded JPEG for Instagram, whose API rejects anything outside a 4:5–1.91:1 ratio (docs/10). */
+  social_image_ig_path: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -256,6 +260,10 @@ export interface MenuSnapshotPayload {
     imageUrl?: string | null;
     /** Public URL of the Spanish-rendered Daily Special image (2026-07-15, docs/08), when the owner translated and rendered one. Consumers should fall back to `imageUrl` when this is null/absent. */
     imageUrlEs?: string | null;
+    /** Natural-ratio JPEG for Facebook crossposting (2026-07-16, docs/10). Frozen into the snapshot so a *scheduled* publish posts exactly what was approved, not a re-render at fire time. Null on menus rendered before this feature — the hook skips rather than posts the SVG, which Meta rejects. */
+    socialImageUrl?: string | null;
+    /** 4:5 (1080x1350) padded JPEG for Instagram, whose API accepts JPEG only within a 4:5–1.91:1 ratio — our natural board is often taller (docs/10). */
+    socialImageIgUrl?: string | null;
   };
   theme: {
     key: string;

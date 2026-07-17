@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: err.message }, { status: 404 });
     }
     if (err instanceof ProviderError) {
-      return NextResponse.json({ error: err.message }, { status: 422 });
+      return NextResponse.json({ error: err.message }, { status: err.code === "rate_limited" ? 429 : 422 });
     }
     return NextResponse.json({ error: "Translation failed." }, { status: 500 });
   }

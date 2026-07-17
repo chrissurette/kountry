@@ -32,7 +32,9 @@ The **provider abstraction is built now** (with one adapter behind it), includin
 ## Phase 4 — Hardening (week 10)
 Rate limiting on public + generate-image endpoints, error taxonomy surfaced in UI, backup/restore verification, accessibility pass on the public site.
 
-> **Known gap — CLOSED early (2026-07-16):** `POST /api/public/{slug}/subscribe` (and `POST /api/public/unsubscribe`) now have Postgres-backed fixed-window rate limiting (`bump_rate_limit()`, migration `20260706000030`, `src/lib/rate-limit.ts`) — keyed on an HMAC-hashed client IP (never stored raw, docs/09), fail-open so an opt-out can never be blocked by the limiter. Shipped ahead of Phase 4 as part of the subscribers hardening pass (see CLAUDE.md's dated note). This phase's remaining rate-limiting scope is the *generate/parse* endpoints, which are authenticated and lower-risk.
+> **Known gap — CLOSED early (2026-07-16):** `POST /api/public/{slug}/subscribe` (and `POST /api/public/unsubscribe`) now have Postgres-backed fixed-window rate limiting (`bump_rate_limit()`, migration `20260706000030`, `src/lib/rate-limit.ts`) — keyed on an HMAC-hashed client IP (never stored raw, docs/09), fail-open so an opt-out can never be blocked by the limiter. Shipped ahead of Phase 4 as part of the subscribers hardening pass (see CLAUDE.md's dated note).
+>
+> **The generate/parse half — also CLOSED (2026-07-16, owner's ask "so we don't accidentally enter an infinite loop"):** every AI provider call is now capped inside `resolveTask()` itself (docs/05's mandatory chokepoint — so routes, server-internal callers, and future features are all covered by one check), keyed per restaurant per task, with a shared `ai_total` backstop that stops any runaway loop regardless of which task it hammers. Limits in `AI_LIMITS` (`src/lib/rate-limit.ts`); denial throws `ProviderError("rate_limited")`, which the AI routes map to 429. Plus a **hard $5/day spend ceiling** summed from `provider_usage` per restaurant-local day — the slow-leak guard hourly counts can't provide. **This phase's rate-limiting item is now fully done.**
 
 ---
 
@@ -44,7 +46,9 @@ Model publishing as **publish targets**. The public site is target #1. Adding In
 2. OAuth token stored in the credentials table (same encryption path as provider keys).
 3. A post-publish hook: after the pointer flip, iterate enabled targets.
 
-No schema surgery, no publish-path changes. Do not build any of this now; keep the post-publish code path a single obvious seam.
+No schema surgery, no publish-path changes. Keep the post-publish code path a single obvious seam.
+
+> **Update 2026-07-16:** the owner asked for the concrete Meta integration structure — it's now fully designed in **docs/10-meta-publishing.md** (researched against the live Graph API docs: Standard-Access/dev-mode path needs no App Review for a single-tenant app; IG is JPEG-only with a 4:5 ratio floor, hence a browser-side JPEG compose at render time; Page tokens don't expire). The three points above became `publish_targets` + `social_posts`, the `/api/social/meta/*` OAuth routes, and `postToSocialTargets()` after the pointer flip. **Still not built** — implement from docs/10 when the owner green-lights it.
 
 ### Multi-tenant onboarding/billing
 Already structural: `restaurant_id` on every table, `restaurant_members`, RLS, slug-keyed public API. Later work is signup/onboarding UI and billing — not schema or architecture changes. Adding a restaurant must always mean adding a row.

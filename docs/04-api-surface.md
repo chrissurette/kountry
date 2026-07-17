@@ -2,7 +2,9 @@
 
 All endpoints are Next.js route handlers. Authenticated routes require a Supabase session and are scoped by RLS. Public routes are keyed by restaurant `slug`; the reads are edge-cached, the one write (subscribe) is not.
 
-**Access control (role gate):** the session middleware (`src/lib/supabase/middleware.ts`) additionally enforces `restaurant_members.role`. An **owner** reaches everything; an **employee** is confined to the Daily Special generator — the allowed API prefixes are `/api/menus/*`, `/api/uploads`, `/api/schedules/*` (and the `/admin/menus/*` pages). Every other authenticated `/api` returns **403** for an employee, and non-generator `/admin` pages redirect them to `/admin/menus/new`. (RLS itself is member-level; the role separation is this middleware gate — **except `subscribers`, whose RLS is owner-only since 2026-07-16 as deliberate defense in depth over customer PII; see docs/03/docs/09.**)
+**Access control (role gate):** the session middleware (`src/lib/supabase/middleware.ts`) additionally enforces `restaurant_members.role`. An **owner** reaches everything; an **employee** is confined to the Daily Special generator — the allowed API prefixes are `/api/menus/*`, `/api/uploads`, `/api/schedules/*` (and the `/admin/menus/*` pages). Every other authenticated `/api` returns **403** for an employee, and non-generator `/admin` pages redirect them to `/admin/menus/new` (a redirect, never a 404 — an employee is never shown a control they can't use: `AdminNav` filters its links by role).
+
+RLS is member-level by default, so **the middleware is the role boundary for most tables** — but it is *not* the only one. Since 2026-07-16 the tables holding customer PII, live credentials, and public-site content are **owner-only in the database as well** (`subscribers`, `email_fax_requests`, `publish_targets`, `social_posts`, `main_menu_*`, and `restaurants` UPDATE). See docs/03's RLS table for the full list and reasoning; the audit behind it found the middleware had been the *only* thing stopping an employee from editing the Main Menu and profile via dev tools.
 
 **Rate limiting (added 2026-07-16):** the three public POSTs below are the only unauthenticated writes, and all go through a per-client fixed-window limiter (`src/lib/rate-limit.ts` → `bump_rate_limit()`, migration `20260706000030`): subscribe ~10/hour, unsubscribe ~30/hour, email-fax requests ~10/hour, keyed on an HMAC-hashed client IP (never stored raw). Over-limit requests get **429**; the limiter **fails open** on any error so a DB hiccup can never block a signup or an opt-out.
 
@@ -61,6 +63,15 @@ All endpoints are Next.js route handlers. Authenticated routes require a Supabas
 | `GET /api/subscribers/export` | CSV download (`Content-Disposition: attachment`) of everyone **still subscribed** who has an email, each row carrying its own `unsubscribe_url`. The exclusion is the opt-out's enforcement point, and the URL column is how the token reaches a real inbox — origin comes from the request, not `NEXT_PUBLIC_SITE_URL` (which isn't set on Netlify). |
 | `GET /api/subscribers/export/phones` | Same shape for **phone numbers** (added 2026-07-16): every still-subscribed row with a phone, each with its `unsubscribe_url` — closes the "phone-only subscriber can never receive their opt-out link" gap (docs/09). For manual contact only, **not** an SMS-marketing surface (mini-TCPA consent isn't captured at signup); suppressed rows excluded, same as the email export. |
 | `GET \| DELETE /api/email-fax-list` | List / bulk-delete (`{ids}`) the daily-special delivery requests shown at `/admin/email-fax-list` (added 2026-07-16). Owner-only twice over: not in the employee middleware allowlist **and** the table's RLS is owner-only (docs/03). |
+
+## Authenticated — social publishing (owner-only, docs/10)
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/social/meta/connect` | Starts the Meta OAuth flow — a **redirect**, not a fetch (the browser has to leave for facebook.com). Mints a `state` nonce into an httpOnly cookie for CSRF. Redirects to Settings with `?social=not_configured` if `META_APP_ID`/`META_APP_SECRET` are unset. |
+| `GET /api/social/meta/callback` | Where Facebook returns. Verifies `state` against the cookie, exchanges code → short-lived → long-lived user token, reads `/me/accounts` for the Page + Page token, discovers the linked IG account, and upserts `publish_targets` with the **encrypted Page token** (the user token is discarded — Page tokens don't expire). Always redirects to `/admin/settings?social=…` with a flag the panel turns into a human message; never leaks a raw Meta error. |
+| `PATCH \| DELETE /api/social/meta` | `{id, enabled}` to pause/resume one target · disconnect entirely (deletes the targets and their tokens; `social_posts` history survives). |
+| `POST /api/menus/{id}/social-images` | Signed upload URLs for the two social JPEGs the browser composes at "Save & render". **Employee-reachable** (it's under `/api/menus`, which employees need for the Daily Special flow) — it only mints upload targets for the caller's own restaurant and can't touch the social connection. |
 
 ## Authenticated — profile & settings
 

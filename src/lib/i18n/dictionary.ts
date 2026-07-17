@@ -183,6 +183,12 @@ export interface Dictionary {
       signOut: string;
       viewPublicSite: string;
     };
+    /** Admin-wide AI spend alert banner (layout.tsx) — bilingual because it renders on employee screens too. */
+    aiAlert: {
+      blocked: string;
+      capped: string;
+      warn: (spent: string, ceiling: string) => string;
+    };
     login: {
       title: string;
       tagline: string;
@@ -332,6 +338,12 @@ export interface Dictionary {
         publishing: string;
         schedule: string;
         saveBeforePublish: string;
+        /** Phones/tablets, where the share sheet's "Save Image" reaches the camera roll. */
+        saveToCameraRoll: string;
+        /** Desktop, where there is no camera roll — the same button just downloads the PNG. */
+        saveImage: string;
+        savingImage: string;
+        saveImageError: string;
       };
     };
   };
@@ -521,6 +533,14 @@ const dictionary: Record<Locale, Dictionary> = {
         signOut: "Sign out",
         viewPublicSite: "View public site",
       },
+      aiAlert: {
+        blocked:
+          "AI requests are being blocked right now — something may be stuck in a loop. Check Settings → AI Providers, and tell the owner if this isn't you.",
+        capped:
+          "The AI features hit today's $5 spending limit and are paused until tomorrow. Check the usage dashboard in Settings → AI Providers.",
+        warn: (spent: string, ceiling: string) =>
+          `Heads up: AI usage is at ${spent} of today's ${ceiling} limit — higher than a normal day. If nobody's been working with menus today, something may be quietly calling the AI.`,
+      },
       login: {
         title: "MyMenuAgent",
         tagline: "Sign in to manage your restaurant's site.",
@@ -673,6 +693,10 @@ const dictionary: Record<Locale, Dictionary> = {
           publishing: "Publishing…",
           schedule: "Schedule",
           saveBeforePublish: "Save & render your changes before publishing.",
+          saveToCameraRoll: "Save to camera roll",
+          saveImage: "Save image",
+          savingImage: "Preparing image…",
+          saveImageError: "Could not save the image. Please try again.",
         },
       },
     },
@@ -860,6 +884,14 @@ const dictionary: Record<Locale, Dictionary> = {
         signOut: "Cerrar sesión",
         viewPublicSite: "Ver sitio público",
       },
+      aiAlert: {
+        blocked:
+          "Las solicitudes de IA se están bloqueando en este momento — algo puede estar atascado en un ciclo. Revisa Configuración → Proveedores de IA, y avísale al dueño si no fuiste tú.",
+        capped:
+          "Las funciones de IA alcanzaron el límite de gasto de $5 de hoy y están pausadas hasta mañana. Revisa el panel de uso en Configuración → Proveedores de IA.",
+        warn: (spent: string, ceiling: string) =>
+          `Atención: el uso de IA va en ${spent} del límite de ${ceiling} de hoy — más alto que un día normal. Si nadie ha trabajado con menús hoy, algo puede estar llamando a la IA sin que lo sepas.`,
+      },
       login: {
         title: "MyMenuAgent",
         tagline: "Inicia sesión para administrar el sitio de tu restaurante.",
@@ -1012,6 +1044,10 @@ const dictionary: Record<Locale, Dictionary> = {
           publishing: "Publicando…",
           schedule: "Programar",
           saveBeforePublish: "Guarda y renderiza tus cambios antes de publicar.",
+          saveToCameraRoll: "Guardar en el carrete",
+          saveImage: "Guardar imagen",
+          savingImage: "Preparando imagen…",
+          saveImageError: "No se pudo guardar la imagen. Inténtalo de nuevo.",
         },
       },
     },

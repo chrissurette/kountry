@@ -42,7 +42,21 @@ async function uploadSvg(supabase: SupabaseClient, restaurantId: string, svg: st
  */
 export async function renderAndStoreSpecial(
   supabase: SupabaseClient,
-  input: { menu_id: string; menu: DailySpecialMenu; themeId: string; menuEs?: DailySpecialMenu | null }
+  input: {
+    menu_id: string;
+    menu: DailySpecialMenu;
+    themeId: string;
+    menuEs?: DailySpecialMenu | null;
+    /**
+     * Storage paths of the social JPEGs the browser composed and uploaded for
+     * this render (docs/10) — Facebook (natural ratio) and Instagram (4:5).
+     * Optional: a browser that couldn't compose them, or a render predating
+     * the feature, just leaves the columns alone; the crosspost hook skips
+     * targets with no image rather than posting the SVG, which Meta rejects.
+     */
+    socialImagePath?: string | null;
+    socialImageIgPath?: string | null;
+  }
 ): Promise<RenderSpecialResult> {
   const restaurantId = await getRestaurantIdOrThrow(supabase);
 
@@ -98,7 +112,7 @@ export async function renderAndStoreSpecial(
 
   const { data: existing } = await supabase
     .from("menus")
-    .select("generated_image_path, generated_image_path_es")
+    .select("generated_image_path, generated_image_path_es, social_image_path, social_image_ig_path")
     .eq("id", input.menu_id)
     .maybeSingle();
   const priorPath = (existing as Pick<Menu, "generated_image_path"> | null)?.generated_image_path;
@@ -112,6 +126,21 @@ export async function renderAndStoreSpecial(
   if (pathEs) {
     update.generated_image_path_es = pathEs;
     update.special_data_es = menuEs;
+  }
+  // Social JPEGs: only touched when this render actually produced new ones —
+  // an English-only re-render from a browser that composed them replaces them;
+  // a render without them leaves whatever was there. Prior files are removed
+  // so re-rendering doesn't orphan storage objects (the same discipline as
+  // the SVGs above).
+  if (input.socialImagePath) {
+    const prior = (existing as Pick<Menu, "social_image_path"> | null)?.social_image_path;
+    if (prior) await supabase.storage.from(BUCKET).remove([prior]);
+    update.social_image_path = input.socialImagePath;
+  }
+  if (input.socialImageIgPath) {
+    const priorIg = (existing as Pick<Menu, "social_image_ig_path"> | null)?.social_image_ig_path;
+    if (priorIg) await supabase.storage.from(BUCKET).remove([priorIg]);
+    update.social_image_ig_path = input.socialImageIgPath;
   }
 
   const { error: updateError } = await supabase.from("menus").update(update).eq("id", input.menu_id);

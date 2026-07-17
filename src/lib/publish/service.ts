@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getRestaurantIdOrThrow } from "@/lib/auth/restaurant-id";
 import { getMenuWithContent } from "@/lib/menu/service";
 import { buildMenuSnapshotPayload } from "@/lib/themes/build-payload";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { postToSocialTargets } from "@/lib/social/targets-service";
 import type { MenuDefaults, PublishedSnapshot, PublishSchedule, Restaurant, Theme } from "@/types/database";
 
 /** Every ISR'd public surface fed by the live snapshot — revalidated on-demand so a publish shows up immediately instead of waiting out the 60s window. */
@@ -119,10 +121,19 @@ async function createSnapshot(
   const imageUrlEs = menu.generated_image_path_es
     ? supabase.storage.from("site-media").getPublicUrl(menu.generated_image_path_es).data.publicUrl
     : null;
+  // Social JPEGs (docs/10) resolved to public URLs here and frozen into the
+  // snapshot: Meta fetches these URLs itself, and a scheduled publish fires
+  // from a cron with no browser to compose them later.
+  const publicUrl = (path: string | null | undefined) =>
+    path ? supabase.storage.from("site-media").getPublicUrl(path).data.publicUrl : null;
+  const socialImages = {
+    imageUrl: publicUrl(menu.social_image_path),
+    imageIgUrl: publicUrl(menu.social_image_ig_path),
+  };
   // Synthetic fallback when no legacy themes row exists — the public site
   // renders imageUrl, so theme.key/config here are only vestigial snapshot metadata.
   const themePayload = theme ?? { key: DEFAULT_THEME_KEY, config: {} };
-  const payload = buildMenuSnapshotPayload(restaurant, menu, themePayload, undefined, imageUrl, imageUrlEs);
+  const payload = buildMenuSnapshotPayload(restaurant, menu, themePayload, undefined, imageUrl, imageUrlEs, socialImages);
 
   const { data: snapshot, error: snapshotError } = await supabase
     .from("published_snapshots")
@@ -154,7 +165,26 @@ async function createSnapshot(
 export async function publishMenuNow(supabase: SupabaseClient, menuId: string): Promise<PublishedSnapshot> {
   const { snapshot, restaurantId } = await createSnapshot(supabase, menuId);
 
-  const { error: flipError } = await supabase
+  // The pointer flip is a service-role write since 2026-07-16, and this is the
+  // one place in the app where that's load-bearing rather than incidental:
+  // `restaurants` UPDATE is now owner-only at the DB layer (migration ..033,
+  // so an employee can't edit the public profile straight from dev tools) —
+  // but publishing IS an employee's job (docs/04's role gate allows it), and
+  // publishing means updating live_snapshot_id on this very row. Column-level
+  // RLS doesn't exist, so "employees may write these two columns and no
+  // others" can't be a policy; it has to be expressed in code.
+  //
+  // Still safely scoped, and NOT a hole: `restaurantId` came from
+  // getRestaurantIdOrThrow() on the SESSION client just above (so a caller
+  // can only ever target their own restaurant), `snapshot` was created under
+  // RLS with that same session client, and the route itself is behind the
+  // middleware's auth + role gate. This is exactly what the scheduled-publish
+  // path (api/cron/promote-schedules) has always done.
+  //
+  // Note this narrows an older docs/02 claim that "RLS is the enforcement
+  // boundary for both the insert and the pointer flip" — the insert still is;
+  // the flip is now enforced by the session-scoped restaurant resolution.
+  const { error: flipError } = await createAdminClient()
     .from("restaurants")
     // live_since drives the midnight auto-clear (clearStaleLiveSpecials).
     .update({ live_snapshot_id: snapshot.id, live_since: new Date().toISOString() })
@@ -168,6 +198,16 @@ export async function publishMenuNow(supabase: SupabaseClient, menuId: string): 
   // on-demand here so a publish shows up immediately rather than waiting
   // out that window.
   revalidatePublicMenuSurfaces();
+
+  // The post-publish hook docs/07 reserved (docs/10): crosspost to Facebook /
+  // Instagram. Deliberately LAST and awaited-but-unfailable — the site is
+  // already live by this point, and postToSocialTargets never throws, so a
+  // Meta outage can't fail or roll back a publish. Uses the service-role
+  // client because it decrypts Page tokens and writes social_posts, which the
+  // owner's session can also do — but the cron path (no session) calls the
+  // same function, and one code path for both is worth more than reusing the
+  // caller's client here.
+  await postToSocialTargets(createAdminClient(), restaurantId, snapshot);
 
   return snapshot;
 }

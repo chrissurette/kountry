@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { preload } from "react-dom";
 import { getSiteRestaurant } from "@/lib/site/restaurant";
 import { getSiteMedia } from "@/lib/site/media";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary } from "@/lib/i18n/dictionary";
+import { GalleryImage } from "./gallery-image";
+
+// The first grid row is eager + preloaded; everything below lazy-loads on
+// scroll. 3 covers the widest first row (sm:grid-cols-3) without competing
+// with the page's own critical resources for bandwidth.
+const EAGER_COUNT = 3;
 
 export const revalidate = 60;
 
@@ -31,6 +38,13 @@ export default async function GalleryPage() {
   const t = getDictionary(locale);
   const photos = restaurant ? await getSiteMedia(restaurant.id, "gallery") : [];
 
+  // React 19 resource preloading from a Server Component: emits
+  // <link rel="preload" as="image"> into the document head, so the first
+  // row's downloads start before the browser reaches the grid markup.
+  for (const photo of photos.slice(0, EAGER_COUNT)) {
+    preload(photo.url, { as: "image", fetchPriority: "high" });
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-5 py-16">
       {/* Centered title/lead, matching Home/About/Menu — the photo grid
@@ -47,13 +61,10 @@ export default async function GalleryPage() {
         {photos.length > 0
           ? photos.map((photo, i) => (
               <figure key={photo.url} className="m-0">
-                {/* eslint-disable-next-line @next/next/no-img-element -- public Storage URL, not a local/optimizable asset */}
-                <img
-                  src={photo.url}
+                <GalleryImage
+                  url={photo.url}
                   alt={photo.caption || `${restaurant?.name ?? "Restaurant"} photo ${i + 1}`}
-                  loading="lazy"
-                  className="aspect-square rounded-2xl border object-cover"
-                  style={{ borderColor: "var(--site-border)" }}
+                  eager={i < EAGER_COUNT}
                 />
                 {photo.caption && (
                   <figcaption className="mt-1.5 text-sm" style={{ color: "var(--site-muted)" }}>

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentRestaurant } from "@/lib/auth/current-restaurant";
 import { getLocale } from "@/lib/i18n/get-locale";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getAiSpendStatus } from "@/lib/rate-limit";
 import { AdminNav } from "./admin-nav";
 
 // The PWA manifest is attached here, not in the root layout, so "install app"
@@ -49,9 +51,33 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     );
   }
 
+  // AI spend/loop alert banner (2026-07-16, owner's ask): the 429 message
+  // only reaches whoever made the request — during a real runaway loop that's
+  // a script, not a person — so the warning has to live where staff actually
+  // look. Renders on EVERY admin screen; fail-soft (null = no banner, layout
+  // never breaks — the social-panel lesson). Escalation: warn at 50% of the
+  // daily budget (the earliest honest slow-leak signal), red at the cap or
+  // while requests are actively being denied this hour.
+  const spend = await getAiSpendStatus(restaurant.id);
+  const t = getDictionary(locale).admin.aiAlert;
+  const banner =
+    spend && (spend.activeDenials || spend.capped)
+      ? { text: spend.activeDenials ? t.blocked : t.capped, className: "border-red-300 bg-red-50 text-red-900" }
+      : spend?.warn
+        ? {
+            text: t.warn(`$${spend.spentTodayUsd.toFixed(2)}`, `$${spend.ceilingUsd.toFixed(0)}`),
+            className: "border-amber-300 bg-amber-50 text-amber-900",
+          }
+        : null;
+
   return (
     <div className="min-h-dvh">
       <AdminNav restaurantName={restaurant.name} role={role} locale={locale} />
+      {banner && (
+        <div role="alert" className={`border-b px-4 py-2.5 text-sm font-medium sm:px-6 ${banner.className}`}>
+          {banner.text}
+        </div>
+      )}
       <main className="px-4 py-6 sm:px-6 sm:py-8">{children}</main>
     </div>
   );

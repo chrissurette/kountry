@@ -61,16 +61,37 @@ export const TRANSLATION_JSON_SCHEMA = {
 } as const;
 
 export function buildTranslationPrompt(units: TranslationUnitInput[]): string {
+  // The dialect and glossary here were set after a native Latino reviewer
+  // found the first (unconstrained) translation pass confusing — a full
+  // hand-curated redo happened 2026-07-16 (CLAUDE.md's menu-Spanish notes,
+  // docs/08's "Machine-translation quality"). New menu items translated by
+  // this prompt must land in the same register and vocabulary as that pass.
   return [
-    "Translate the following US restaurant menu text from English to natural, appetizing Spanish",
-    "as it would read on a menu in a Spanish-speaking restaurant in the United States.",
+    "Translate the following US restaurant menu text from English to natural, appetizing",
+    "LATIN AMERICAN Spanish — Cuban / Puerto Rican / South American, NOT Mexican and NOT",
+    "European Spanish — as it would read on a bilingual diner menu in Florida.",
+    "",
+    "Fixed glossary (always use exactly these):",
+    "- bacon = tocineta (never tocino/beicon) · pork = puerco · peanut = maní",
+    "- green beans = habichuelas tiernas · beets = remolachas · peach = melocotón",
+    "- eggs any style = al gusto; scrambled = revueltos; sunny side up = fritos;",
+    "  over-easy/-medium/-hard = fritos por ambos lados con yema blanda / media / dura (never volteados/virados)",
+    "- sausage patty = tortita de salchicha · sausage link = salchicha",
+    "- grilled (diner flat-top) = a la plancha · choose = escoger · add = agregar (never añadir)",
+    "- \"& Fries\" = \"con Papas Fritas\" · sweet potato = batata",
+    "Keep these iconic US menu words in English, untranslated (customers order by these names):",
+    "grits, hash browns, biscuit (NEVER galleta or bizcocho), gravy, waffle (never gofre),",
+    "bagel, sub, wrap, club, BLT, Grilled Cheese, Patty Melt, Philly Cheese Steak, Hot Dog,",
+    "Corned Beef Hash, Texas Toast. home fries = papas caseras; toast = pan tostado.",
     "",
     "Rules:",
     "- Return one entry per input id, with that exact same id, in the translations array.",
     "- Translate `name` and `description`. If `description` is null, return description as null — never invent one.",
-    "- Keep proper nouns, brand names, and dish names that are already commonly used in English as-is",
-    '  (e.g. keep "Philly" in a dish name) unless a Spanish name is clearly more natural.',
+    "- Impersonal register (\"Se sirve con…\") — no tú or usted forms in descriptions.",
+    "- Lists must keep EXACTLY as many options as the English — never merge or drop an item from",
+    "  an enumeration (a list of 5 egg styles must come back as 5).",
     "- Do not translate or alter numbers, prices, or abbreviations like \"MP\".",
+    "- Preserve every \" · \" separator exactly where the English has one — same count, same placement.",
     "- Keep translations concise — menu copy, not full sentences where the English wasn't either.",
     '- Use normal word spacing — never run words together (write "Pollo y Ñoquis", never "Pollo yÑoquis").',
     "",

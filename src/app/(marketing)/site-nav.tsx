@@ -29,27 +29,42 @@ const LOCALE_LABEL: Record<Locale, string> = { en: "EN", es: "ES" };
  * broke/wrapped). Same crowding class of bug admin-nav hit earlier with far
  * fewer items (see its own dated note) — same fix, raise the hamburger
  * threshold so there's real room before anything goes inline.
- *   - >=xl: full inline layout (logo | centered links | toggle+CTA).
- *   - <xl down to 460px: hamburger for the link list only; the EN/ES toggle
- *     and CTA stay in the top bar next to the hamburger icon — the
+ *   - >=1360px: full inline layout (logo | centered links | toggle+CTA).
+ *   - <1360px down to 460px: hamburger for the link list only; the EN/ES
+ *     toggle and CTA stay in the top bar next to the hamburger icon — the
  *     phone-order CTA is too important to bury on an ordinary phone.
  *   - <460px ("potentially very thin"): the toggle and CTA also move into the
  *     drawer, so the top bar is just the logo + hamburger.
  *
- * That inline threshold has now moved twice, both times because the link set
- * grew: sm (640px) -> lg (1024px) at 7 links, then **lg -> xl (1280px) on
- * 2026-07-16 when Jobs + Email/Fax List brought it to 8 (9 off-homepage,
- * where the Home link also renders)**. At lg the Spanish header overflowed
+ * That inline threshold has moved a few times now. First twice because the
+ * link set grew: sm (640px) -> lg (1024px) at 7 links, then lg -> xl (1280px)
+ * on 2026-07-16 when Jobs + Email/Fax List brought it to 8 (9 off-homepage,
+ * where the Home link also renders). At lg the Spanish header overflowed
  * its own bar by 81px and pushed the whole page into horizontal scroll,
  * while English fit with *exactly* 0px to spare — i.e. English alone would
  * have shipped this bug invisibly, and even "fitting" was one label away
  * from breaking. Measured live, both locales, at the boundary.
  *
+ * **Then xl -> 1360px on 2026-07-16, same day, owner's explicit preference
+ * call rather than a measured overflow** — the inline layout at exactly-xl
+ * widths (~1280px, real laptop territory) read as cramped even though it
+ * technically fit, so the hamburger now persists a bit further up before
+ * switching. A deliberately small +80px nudge past the xl breakpoint (not
+ * the next full Tailwind tier, 2xl/1536px — an earlier pass jumped there,
+ * which the owner asked to walk back as too big a change for what was meant
+ * to be "a little bit larger"), hence the arbitrary `min-[1360px]:` variant
+ * instead of a named breakpoint. This was about how it *looks*, not whether
+ * it *fits* — don't move it back down just because xl "measures fine".
+ * (A same-day attempt to pin this to a specific live-observed viewport,
+ * 1241px, was tried and reverted back to this 1360px value — the owner's
+ * follow-up "revert that last change" undid the pin, not the earlier
+ * 2xl->1360px correction.)
+ *
  * 460px (not ~400px) is deliberate for the same reason: Spanish's "Llame
  * para ordenar" CTA is ~45px wider than English's "Call to Order" and pushed
  * a first pass at 430px into real overflow.
  *
- * **Re-verify BOTH locales at the xl boundary if this threshold, the CTA
+ * **Re-verify BOTH locales at the 1360px boundary if this threshold, the CTA
  * copy, or the link set ever changes** — ES is the binding constraint every
  * time, and this comment's own warning is what caught the 8-link regression.
  * The CTA additionally carries shrink-0 whitespace-nowrap everywhere it
@@ -116,18 +131,18 @@ export function SiteNav({
         background: "color-mix(in srgb, var(--site-bg) 88%, transparent)",
       }}
     >
-      <div className="flex items-center justify-between px-6 py-3 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:px-8">
+      <div className="flex items-center justify-between px-6 py-3 min-[1360px]:grid min-[1360px]:grid-cols-[1fr_auto_1fr] min-[1360px]:px-8">
         <Link
           href="/"
           onClick={() => setOpen(false)}
-          className="shrink-0 whitespace-nowrap font-site-heading text-lg font-semibold tracking-tight xl:justify-self-start"
+          className="shrink-0 whitespace-nowrap font-site-heading text-lg font-semibold tracking-tight min-[1360px]:justify-self-start"
           style={{ color: "var(--site-primary)" }}
         >
           {name}
         </Link>
 
         {/* Centered nav on desktop (the auto middle column of the 3-zone grid). */}
-        <nav className="hidden items-center justify-center gap-6 text-sm xl:flex">
+        <nav className="hidden items-center justify-center gap-6 text-sm min-[1360px]:flex">
           {!isHome && (
             <Link
               href="/"
@@ -162,7 +177,7 @@ export function SiteNav({
 
         {/* Desktop-only right cluster (>=xl) — same content as the two
             below-xl fallbacks further down, never all three at once. */}
-        <div className="hidden items-center gap-3 xl:flex xl:justify-self-end">
+        <div className="hidden items-center gap-3 min-[1360px]:flex min-[1360px]:justify-self-end">
           {localeSwitcher}
           {phone && (
             <a
@@ -178,7 +193,7 @@ export function SiteNav({
         {/* Below-xl top bar: hamburger always here; toggle+CTA join it down
             to ~460px (see the component note), below which they move into
             the drawer instead so this row never runs out of room. */}
-        <div className="flex items-center gap-2 xl:hidden">
+        <div className="flex items-center gap-2 min-[1360px]:hidden">
           <div className="hidden items-center gap-2 min-[460px]:flex">
             {localeSwitcher}
             {phone && (
@@ -224,7 +239,7 @@ export function SiteNav({
           // rather than stretched edge to edge; right-6 lines its edge up
           // with the hamburger button's own edge (matches the top bar's
           // own px-6).
-          className="absolute right-6 top-full z-20 flex w-64 max-w-[calc(100vw-3rem)] max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto rounded-xl border p-2 text-sm shadow-lg xl:hidden"
+          className="absolute right-6 top-full z-20 flex w-64 max-w-[calc(100vw-3rem)] max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto rounded-xl border p-2 text-sm shadow-lg min-[1360px]:hidden"
           style={{ borderColor: "var(--site-border)", background: "var(--site-bg)" }}
         >
           {/* text-right, not the flex-col default of left: the hamburger

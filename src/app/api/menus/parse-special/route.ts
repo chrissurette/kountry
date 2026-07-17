@@ -23,6 +23,11 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (err) {
     if (err instanceof NoRestaurantError) return NextResponse.json({ error: err.message }, { status: 404 });
+    // rate_limited is OUR throttle (resolveTask's runaway-spend guard), not a
+    // provider failure — 429, so nothing upstream mistakes it for a Meta/AI
+    // outage or retries it as transient.
+    if (err instanceof ProviderError && err.code === "rate_limited")
+      return NextResponse.json({ error: err.message }, { status: 429 });
     if (err instanceof ProviderError) return NextResponse.json({ error: err.message }, { status: 502 });
     return NextResponse.json({ error: "Failed to read the menu photo." }, { status: 500 });
   }
