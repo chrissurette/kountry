@@ -50,7 +50,7 @@ export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
             required
             className={fieldClass()}
           />
-          <span className="text-xs text-neutral-400">Used to key your public menu API.</span>
+          <span className="text-xs text-neutral-400">Used in public links that identify your restaurant.</span>
         </label>
         <label className="flex flex-col gap-1 text-sm">
           Address
@@ -131,8 +131,8 @@ export function SettingsForm({ restaurant }: { restaurant: Restaurant }) {
           </label>
         </div>
         <p className="text-xs text-neutral-400">
-          Logo upload is planned — colors and fonts already flow into your public site (src/lib/site/theme.ts)
-          and Daily Specials History previews (src/lib/themes/tokens.ts) from this one profile.
+          Colors and fonts are applied automatically across your public site and Daily Specials previews. Logo upload
+          is planned for a future update.
         </p>
       </Section>
 

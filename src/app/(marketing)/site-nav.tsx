@@ -135,8 +135,8 @@ export function SiteNav({
         <Link
           href="/"
           onClick={() => setOpen(false)}
-          className="shrink-0 whitespace-nowrap font-site-heading text-lg font-semibold tracking-tight min-[1360px]:justify-self-start"
-          style={{ color: "var(--site-primary)" }}
+          className="shrink-0 whitespace-nowrap text-base font-medium tracking-[0.015em] sm:text-lg min-[1360px]:justify-self-start"
+          style={{ color: "#0b4f00", fontFamily: "var(--font-montserrat), var(--font-geist-sans), sans-serif" }}
         >
           {name}
         </Link>
@@ -211,7 +211,8 @@ export function SiteNav({
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? t.closeMenu : t.openMenu}
             aria-expanded={open}
-            className="shrink-0"
+            aria-controls="site-nav-drawer"
+            className="shrink-0 transition-transform duration-200 active:scale-90"
             style={{ color: "var(--site-primary)" }}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -221,8 +222,10 @@ export function SiteNav({
         </div>
       </div>
 
-      {open && (
         <nav
+          id="site-nav-drawer"
+          data-open={open ? "true" : "false"}
+          aria-hidden={!open}
           // Overlay, not in-flow (reported live: opening the drawer pushed
           // the whole page down instead of floating over it). header is
           // position:sticky, which already establishes a positioning
@@ -239,7 +242,7 @@ export function SiteNav({
           // rather than stretched edge to edge; right-6 lines its edge up
           // with the hamburger button's own edge (matches the top bar's
           // own px-6).
-          className="absolute right-6 top-full z-20 flex w-64 max-w-[calc(100vw-3rem)] max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto rounded-xl border p-2 text-sm shadow-lg min-[1360px]:hidden"
+          className="site-nav-drawer absolute right-6 top-full z-20 flex w-64 max-w-[calc(100vw-3rem)] max-h-[calc(100dvh-4rem)] flex-col gap-1 overflow-y-auto rounded-xl border p-2 text-sm shadow-lg min-[1360px]:hidden"
           style={{ borderColor: "var(--site-border)", background: "var(--site-bg)" }}
         >
           {/* text-right, not the flex-col default of left: the hamburger
@@ -284,7 +287,6 @@ export function SiteNav({
             </a>
           )}
         </nav>
-      )}
     </header>
   );
 }

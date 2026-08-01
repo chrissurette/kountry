@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation";
 import { ThemeRenderer } from "@/lib/themes/registry";
 import type { PublishedSnapshot } from "@/types/database";
 
+function snapshotLabel(snapshot: PublishedSnapshot): string {
+  const title = snapshot.payload.menu.title?.trim();
+  if (title) return title;
+
+  const menuDate = snapshot.payload.menu.service_date;
+  const date = menuDate ? new Date(`${menuDate}T12:00:00`) : new Date(snapshot.published_at);
+  return `Daily special — ${date.toLocaleDateString([], { dateStyle: "medium" })}`;
+}
+
 export function HistoryList({ snapshots, liveSnapshotId }: { snapshots: PublishedSnapshot[]; liveSnapshotId: string | null }) {
   const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -30,7 +39,7 @@ export function HistoryList({ snapshots, liveSnapshotId }: { snapshots: Publishe
           <div key={snapshot.id} className="rounded-lg border border-neutral-200">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 p-3">
               <div className="min-w-0 max-w-full">
-                <p className="truncate text-sm font-medium">{snapshot.payload.menu.title || "Untitled menu"}</p>
+                <p className="truncate text-sm font-medium">{snapshotLabel(snapshot)}</p>
                 <p className="truncate text-xs text-neutral-500">
                   {new Date(snapshot.published_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })} · {snapshot.payload.theme.key}
                 </p>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getSiteRestaurant } from "@/lib/site/restaurant";
 import { getSiteMedia } from "@/lib/site/media";
@@ -81,11 +82,16 @@ export default async function HomePage() {
               <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--site-accent)" }}>
                 {siteContent.heroKicker}
               </p>
-              <h1
-                className="font-site-heading mt-2 text-4xl font-bold leading-[1.05] sm:text-5xl"
-                style={{ color: "var(--site-primary)" }}
-              >
-                {restaurant?.name ?? "Our Restaurant"}
+              <h1 className="mt-4">
+                <Image
+                  src="/brand/kountry-kitchen-logo.webp"
+                  alt={restaurant?.name ?? "Our Restaurant"}
+                  width={1078}
+                  height={385}
+                  loading="eager"
+                  unoptimized
+                  className="mx-auto h-auto w-full lg:mx-0"
+                />
               </h1>
               <p className="font-site-heading mt-3 text-lg italic sm:text-xl" style={{ color: "var(--site-text)" }}>
                 {siteContent.tagline}

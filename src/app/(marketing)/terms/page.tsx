@@ -61,8 +61,8 @@ export default async function TermsPage() {
 
       <Section heading="No online ordering or payments here">
         <p>
-          This site doesn&apos;t process orders or take payment information. &quot;Order&quot; and &quot;Call to
-          Order&quot; links connect you to us by phone — no payment card information is ever entered on this site.
+          This site doesn&apos;t process orders or take payment information. The &quot;Call to Order&quot; links
+          connect you to us by phone — no payment card information is ever entered on this site.
         </p>
       </Section>
 

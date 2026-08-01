@@ -15,7 +15,8 @@ import type { DailySpecialMenu } from "./special-menu-schema";
  * extraction — never rendered, so translating them would be pointless).
  * `dessertsLabel`, `additionalSections` titles/notes/items, soup names and
  * soup tier labels ("Cup"/"Bowl"/"Small"), and `dateLabel` ("Happy Monday")
- * ARE translated — all customer-facing copy. `dateText` is not (numeric).
+ * ARE translated — all customer-facing copy. `dateText` is translated only
+ * when it contains written English month/day names; numeric dates stay as-is.
  */
 export interface TranslatableUnit {
   id: string;
@@ -31,8 +32,10 @@ export function extractTranslatableUnits(menu: DailySpecialMenu): TranslatableUn
   push("title", menu.title);
   push("subtitle", menu.subtitle);
   // dateLabel ("Happy Monday") is a greeting shown in the letterhead → translate.
-  // dateText ("7-13-26") is numeric → excluded (nothing to translate).
   push("dateLabel", menu.dateLabel);
+  // The extractor may return a numeric date or a written month/day. Only the
+  // latter needs a translation unit.
+  if (menu.dateText && /[A-Za-z]/.test(menu.dateText)) push("dateText", menu.dateText);
   menu.entrees.forEach((e, i) => {
     push(`entrees.${i}.name`, e.name);
     push(`entrees.${i}.description`, e.description);
@@ -72,6 +75,7 @@ export function applyTranslations(menu: DailySpecialMenu, translations: Map<stri
   next.title = get("title") ?? next.title;
   if (next.subtitle) next.subtitle = get("subtitle") ?? next.subtitle;
   if (next.dateLabel) next.dateLabel = get("dateLabel") ?? next.dateLabel;
+  if (next.dateText) next.dateText = localizeEnglishDateWords(get("dateText") ?? next.dateText);
 
   next.entrees.forEach((e, i) => {
     e.name = get(`entrees.${i}.name`) ?? e.name;
@@ -86,7 +90,7 @@ export function applyTranslations(menu: DailySpecialMenu, translations: Map<stri
   next.soups.forEach((s, i) => {
     if (s.name) s.name = get(`soups.${i}.name`) ?? s.name;
     s.tiers.forEach((t, j) => {
-      if (t.label) t.label = get(`soups.${i}.tiers.${j}.label`) ?? t.label;
+      if (t.label) t.label = fixedSoupSizeTranslation(t.label) ?? get(`soups.${i}.tiers.${j}.label`) ?? t.label;
     });
   });
 
@@ -118,6 +122,50 @@ export function applyTranslations(menu: DailySpecialMenu, translations: Map<stri
   });
 
   return next;
+}
+
+const SOUP_SIZE_ES: Record<string, string> = {
+  cup: "Taza",
+  bowl: "Tazón",
+  small: "Pequeño",
+  medium: "Mediano",
+  large: "Grande",
+};
+
+function fixedSoupSizeTranslation(label: string): string | null {
+  return SOUP_SIZE_ES[label.trim().toLowerCase()] ?? null;
+}
+
+const ENGLISH_DATE_WORDS: Record<string, string> = {
+  january: "enero",
+  february: "febrero",
+  march: "marzo",
+  april: "abril",
+  may: "mayo",
+  june: "junio",
+  july: "julio",
+  august: "agosto",
+  september: "septiembre",
+  october: "octubre",
+  november: "noviembre",
+  december: "diciembre",
+  monday: "lunes",
+  tuesday: "martes",
+  wednesday: "miércoles",
+  thursday: "jueves",
+  friday: "viernes",
+  saturday: "sábado",
+  sunday: "domingo",
+};
+
+function localizeEnglishDateWords(text: string): string {
+  return text.replace(
+    /\b(january|february|march|april|may|june|july|august|september|october|november|december|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi,
+    (word) => {
+      const translated = ENGLISH_DATE_WORDS[word.toLowerCase()];
+      return word === word.toUpperCase() ? translated.toUpperCase() : translated;
+    },
+  );
 }
 
 /** OpenAI Structured Outputs (strict json_schema) for one translation call. */
@@ -173,6 +221,8 @@ export function buildSpecialTranslationPrompt(units: TranslatableUnit[]): string
     "Rules:",
     "- Return one entry per input id, with that exact same id.",
     '- Do not translate or alter numbers, prices, or abbreviations like "MP".',
+    "- Translate written month and weekday names in dates; keep numeric-only dates unchanged.",
+    "- Soup sizes: Cup = Taza, Bowl = Tazón, Small = Pequeño, Medium = Mediano, Large = Grande.",
     "- Lists must keep EXACTLY as many options as the English — never merge or drop an item",
     "  from an enumeration.",
     "- Keep translations concise — board copy, not full sentences where the English wasn't either.",

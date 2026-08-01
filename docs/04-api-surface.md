@@ -35,7 +35,7 @@ RLS is member-level by default, so **the middleware is the role boundary for mos
 | `GET \| DELETE /api/menus/{id}` | Read / delete a Daily Special draft |
 | `GET \| PATCH /api/main-menu` | The permanent Main Menu — hand-typed, no AI/photo involved. PATCH replaces the full sections+items payload atomically and takes effect immediately, no publish step. |
 | `POST /api/main-menu/translate` | `{units: [{id, name, description}]}` — translates section/item name+description to Spanish (`translate_menu` provider task, docs/05). Stateless: doesn't touch the database, just returns translations for the Main Menu editor to review and include in its next PATCH. |
-| `DELETE /api/menus/{id}` | Delete a saved special from the Library (also removes its rendered `.svg` from Storage). The `/api/item-library/*` routes were removed 2026-07-16 when the Library became "Saved Specials". |
+| `DELETE /api/menus/{id}` | Delete an **unpublished draft** from the Library. Returns 409 for published/scheduled specials because their immutable History snapshots keep referencing the rendered files. Draft deletion removes its English/Spanish SVGs and social JPEGs from Storage. The `/api/item-library/*` routes were removed 2026-07-16 when the Library became "Saved Specials". |
 
 ## Authenticated — publish, schedule, history
 

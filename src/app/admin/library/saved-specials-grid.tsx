@@ -16,6 +16,7 @@ export function SavedSpecialsGrid({ initialSpecials }: { initialSpecials: SavedS
   const router = useRouter();
   const [specials, setSpecials] = useState(initialSpecials);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function remove(id: string) {
@@ -23,8 +24,10 @@ export function SavedSpecialsGrid({ initialSpecials }: { initialSpecials: SavedS
     setError(null);
     try {
       const res = await fetch(`/api/menus/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Could not delete this special.");
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? "Could not delete this special.");
       setSpecials((prev) => prev.filter((s) => s.id !== id));
+      setConfirmingId(null);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delete failed.");
@@ -41,14 +44,18 @@ export function SavedSpecialsGrid({ initialSpecials }: { initialSpecials: SavedS
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {specials.map((s) => (
+        {specials.map((s) => {
+          const label = s.dateText ?? new Date(s.createdAt).toLocaleDateString();
+          const canDelete = s.status === "draft" && !s.isLive;
+          const confirming = confirmingId === s.id;
+          return (
           <div key={s.id} className="flex flex-col overflow-hidden rounded-lg border border-neutral-200">
             <Link href={`/admin/menus/${s.id}/review`} className="block bg-neutral-50">
               {/* eslint-disable-next-line @next/next/no-img-element -- public Storage SVG URL */}
-              <img src={s.imageUrl} alt={s.dateText ?? "Daily special"} className="w-full" />
+              <img src={s.imageUrl} alt={label} className="w-full" />
             </Link>
             <div className="flex items-center gap-2 border-t border-neutral-200 px-3 py-2 text-sm">
-              <span className="flex-1 truncate">{s.dateText ?? new Date(s.createdAt).toLocaleDateString()}</span>
+              <span className="flex-1 truncate">{label}</span>
               {s.isLive ? (
                 <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Live</span>
               ) : (
@@ -59,17 +66,50 @@ export function SavedSpecialsGrid({ initialSpecials }: { initialSpecials: SavedS
               <Link href={`/admin/menus/${s.id}/review`} className="text-xs font-medium text-neutral-700 hover:underline">
                 Open
               </Link>
-              <button
-                type="button"
-                onClick={() => remove(s.id)}
-                disabled={busyId === s.id}
-                className="ml-auto text-xs font-medium text-red-600 hover:underline disabled:opacity-50"
-              >
-                {busyId === s.id ? "Deleting…" : "Delete"}
-              </button>
+              {canDelete ? (
+                confirming ? (
+                  <div
+                    className="ml-auto flex flex-wrap items-center justify-end gap-2"
+                    role="alertdialog"
+                    aria-label={`Delete ${label}?`}
+                  >
+                    <span className="w-full text-right text-xs text-red-700">Delete permanently? This cannot be undone.</span>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingId(null)}
+                      disabled={busyId === s.id}
+                      className="text-xs font-medium text-neutral-600 hover:underline disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => remove(s.id)}
+                      disabled={busyId === s.id}
+                      className="text-xs font-medium text-red-700 hover:underline disabled:opacity-50"
+                    >
+                      {busyId === s.id ? "Deleting…" : "Delete permanently"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError(null);
+                      setConfirmingId(s.id);
+                    }}
+                    className="ml-auto text-xs font-medium text-red-600 hover:underline"
+                  >
+                    Delete
+                  </button>
+                )
+              ) : (
+                <span className="ml-auto text-xs text-neutral-400">Kept in History</span>
+              )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

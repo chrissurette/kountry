@@ -75,29 +75,25 @@ export function AdminNav({
 
   return (
     <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white">
-      {/* xl:max-w-none is load-bearing, not cosmetic: the inline nav's ES
+      {/* 2xl:max-w-none is load-bearing, not cosmetic: the inline nav's ES
           labels need ~1230px of row, so inside the old max-w-5xl (1024px)
           cap the bar overflowed at EVERY viewport width — raising the
-          breakpoint alone fixed nothing (measured: 174px overflow at 1280
-          before this). Uncapping at xl means it *just* fits at the 1280
-          boundary (12px of slack in ES — normal for a breakpoint edge) and
-          gains real margin as the window widens; a fixed 7xl cap was tried
-          first and rejected because it froze that 12px as the permanent
-          maximum at every width. Re-measure BOTH locales at 1280 if a nav
-          label or item is ever added — ES is the binding constraint. */}
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 xl:max-w-none">
+          breakpoint alone fixed nothing. The explicit Return to main site
+          action added another long bilingual label, so the inline row now
+          starts at 2xl; below that, the same action stays in the drawer. */}
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 2xl:max-w-none">
         <Link href="/" className="shrink-0 text-base font-semibold hover:underline" title={t.viewPublicSite}>
           {restaurantName}
         </Link>
 
-        {/* Desktop: inline nav. ≥xl since 2026-07-16 — the Fax/Email List
+        {/* Desktop: inline nav. ≥2xl since 2026-07-31 — the Fax/Email List
             link made it 8 items + Sign out, and at lg (1024px) the SPANISH
             labels overflowed the bar by a measured 189px (page-level
             horizontal scroll), while this project's history says EN-only
             checks miss exactly this. Third occurrence of the crowding bug
             (admin-nav md→lg at 7 items; SiteNav lg→xl at 8) — same fix each
             time: more room before going inline; tablets use the drawer. */}
-        <nav className="hidden items-center gap-0.5 xl:flex">
+        <nav className="hidden items-center gap-0.5 2xl:flex">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -112,6 +108,12 @@ export function AdminNav({
             </Link>
           ))}
           <div className="ml-1.5 flex items-center gap-1.5 border-l border-neutral-200 pl-1.5">
+            <Link
+              href="/"
+              className="whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+            >
+              {t.viewPublicSite}
+            </Link>
             {localeSwitcher}
             <form action={signOut}>
               {/* whitespace-nowrap like the links: without it, flex pressure
@@ -128,7 +130,7 @@ export function AdminNav({
         </nav>
 
         {/* Mobile/tablet: locale switcher + hamburger */}
-        <div className="flex items-center gap-2 xl:hidden">
+        <div className="flex items-center gap-2 2xl:hidden">
           {localeSwitcher}
           <button
             type="button"
@@ -166,7 +168,7 @@ export function AdminNav({
                it floats over the page instead of pushing every element down.
                Needs its own bg/shadow once it's out of the header's box. */}
       {open && (
-        <nav className="absolute right-4 top-full z-20 flex max-h-[calc(100dvh-4rem)] w-56 max-w-[calc(100vw-2rem)] flex-col gap-0.5 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg sm:right-6 xl:hidden">
+        <nav className="absolute right-4 top-full z-20 flex max-h-[calc(100dvh-4rem)] w-64 max-w-[calc(100vw-2rem)] flex-col gap-0.5 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-2 shadow-lg sm:right-6 2xl:hidden">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -179,7 +181,14 @@ export function AdminNav({
               {link.label}
             </Link>
           ))}
-          <form action={signOut} className="mt-1 border-t border-neutral-200 pt-2">
+          <Link
+            href="/"
+            onClick={() => setOpen(false)}
+            className="mt-1 border-t border-neutral-200 px-3 py-2.5 pt-3 text-right text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
+          >
+            {t.viewPublicSite}
+          </Link>
+          <form action={signOut}>
             <button
               type="submit"
               className="w-full rounded-md px-3 py-2.5 text-right text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100"

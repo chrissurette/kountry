@@ -19,7 +19,7 @@ const STATUS_MESSAGE: Record<string, { text: string; tone: "ok" | "warn" | "erro
   cancelled: { text: "Connection cancelled — nothing changed.", tone: "warn" },
   no_pages: { text: "That Facebook account doesn't manage any Pages, so there's nothing to post to.", tone: "error" },
   invalid_state: { text: "That connection link expired. Please try connecting again.", tone: "error" },
-  not_configured: { text: "Facebook isn't set up on this site yet (missing app credentials).", tone: "error" },
+  not_configured: { text: "Facebook publishing isn't configured on this site yet.", tone: "error" },
   failed: { text: "Could not finish connecting to Facebook. Please try again.", tone: "error" },
 };
 
@@ -115,9 +115,8 @@ export function SocialPanel({
 
       {!configured ? (
         <p className="rounded-md bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
-          Not set up yet. Facebook publishing needs a Meta app — see <code>docs/10-meta-publishing.md</code> for the
-          one-time setup, then add <code>META_APP_ID</code> and <code>META_APP_SECRET</code> to this site&rsquo;s
-          environment variables.
+          Facebook and Instagram publishing isn&apos;t configured yet. Ask the person who manages this site to finish
+          the one-time connection setup.
         </p>
       ) : !connected ? (
         <a

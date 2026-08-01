@@ -11,8 +11,8 @@ export default async function LibraryPage() {
     <div className="mx-auto max-w-4xl">
       <h1 className="mb-1 text-xl font-semibold">Saved Specials</h1>
       <p className="mb-6 text-sm text-neutral-500">
-        Every daily special you&apos;ve rendered is saved here — open one to edit or re-publish it, or delete the
-        ones you no longer need. Nothing you make gets lost, even if you don&apos;t publish it.
+        Every daily special you&apos;ve rendered is saved here. Open one to edit or publish it; unpublished drafts can
+        be deleted, while published specials stay safely preserved in History.
       </p>
 
       {specials.length === 0 ? (

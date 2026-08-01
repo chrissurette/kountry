@@ -65,6 +65,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
         initialSpecialEs={specialEs}
         initialImageUrlEs={imageUrlEs}
         pendingSchedule={pendingSchedule}
+        initialMenuStatus={menu.status}
         locale={locale}
       />
     </div>

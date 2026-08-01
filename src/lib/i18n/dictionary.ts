@@ -10,7 +10,6 @@ export interface Dictionary {
   nav: {
     home: string;
     menu: string;
-    order: string;
     about: string;
     visit: string;
     gallery: string;
@@ -35,6 +34,12 @@ export interface Dictionary {
     openNow: string;
     closedNow: string;
     close: string;
+    partnerAd: {
+      eyebrow: string;
+      message: string;
+      name: string;
+      cta: string;
+    };
     /** Body line for a page that exists in the nav but has no content yet (Jobs, Email/Fax List). Shared while they're both genuine placeholders — give a page its own copy the moment it gets real content. */
     pageComingSoon: string;
     days: Record<string, string>;
@@ -119,13 +124,6 @@ export interface Dictionary {
     reachOut: string;
     callPhone: (phone: string) => string;
     emailUs: string;
-  };
-  order: {
-    onlineOrdering: string;
-    comingSoon: string;
-    body: string;
-    browseTheMenu: string;
-    orderInPerson: (address: string) => string;
   };
   emailFax: {
     nameLabel: string;
@@ -336,6 +334,7 @@ export interface Dictionary {
         cancelSchedule: string;
         publishNow: string;
         publishing: string;
+        scheduleFor: string;
         schedule: string;
         saveBeforePublish: string;
         /** Phones/tablets, where the share sheet's "Save Image" reaches the camera roll. */
@@ -344,6 +343,13 @@ export interface Dictionary {
         saveImage: string;
         savingImage: string;
         saveImageError: string;
+        discardAndStartOver: string;
+        discardConfirmTitle: string;
+        discardConfirmBody: string;
+        cancelDiscard: string;
+        confirmDiscard: string;
+        discarding: string;
+        errorDiscard: string;
       };
     };
   };
@@ -354,7 +360,6 @@ const dictionary: Record<Locale, Dictionary> = {
     nav: {
       home: "Home",
       menu: "Menu",
-      order: "Order",
       about: "About",
       visit: "Visit",
       gallery: "Gallery",
@@ -379,6 +384,12 @@ const dictionary: Record<Locale, Dictionary> = {
       openNow: "Open now",
       closedNow: "Closed now",
       close: "Close",
+      partnerAd: {
+        eyebrow: "From our partners",
+        message: "Have estate items, jewelry, gold, or silver to sell?",
+        name: "Naples Estate Jewelry",
+        cta: "Visit website",
+      },
       pageComingSoon: "This page is coming soon — check back shortly.",
       days: {
         mon: "Monday",
@@ -472,13 +483,6 @@ const dictionary: Record<Locale, Dictionary> = {
       callPhone: (phone: string) => `Call ${phone}`,
       emailUs: "Email us",
     },
-    order: {
-      onlineOrdering: "Online Ordering",
-      comingSoon: "Coming soon",
-      body: "We're building online ordering so you can get your favorites without the wait. It's not quite ready yet — but in the meantime, ordering is one call (or a quick visit) away.",
-      browseTheMenu: "Browse the Menu",
-      orderInPerson: (address: string) => `Prefer to order in person? We're at ${address}.`,
-    },
     emailFax: {
       nameLabel: "Business or location name",
       nameHint: "If it's just for you, your first name is fine.",
@@ -531,7 +535,7 @@ const dictionary: Record<Locale, Dictionary> = {
         emailFaxList: "Fax/Email List",
         settings: "Settings",
         signOut: "Sign out",
-        viewPublicSite: "View public site",
+        viewPublicSite: "Return to main site",
       },
       aiAlert: {
         blocked:
@@ -691,12 +695,20 @@ const dictionary: Record<Locale, Dictionary> = {
           cancelSchedule: "Cancel schedule",
           publishNow: "Approve & Publish Now",
           publishing: "Publishing…",
+          scheduleFor: "Date and time to publish",
           schedule: "Schedule",
           saveBeforePublish: "Save & render your changes before publishing.",
           saveToCameraRoll: "Save to camera roll",
           saveImage: "Save image",
           savingImage: "Preparing image…",
           saveImageError: "Could not save the image. Please try again.",
+          discardAndStartOver: "Discard & start over",
+          discardConfirmTitle: "Discard this draft?",
+          discardConfirmBody: "This permanently deletes this draft and its saved images. This cannot be undone.",
+          cancelDiscard: "Keep this draft",
+          confirmDiscard: "Discard & start over",
+          discarding: "Discarding…",
+          errorDiscard: "Could not discard this draft.",
         },
       },
     },
@@ -705,7 +717,6 @@ const dictionary: Record<Locale, Dictionary> = {
     nav: {
       home: "Inicio",
       menu: "Menú",
-      order: "Pedidos",
       about: "Nosotros",
       visit: "Visítanos",
       gallery: "Galería",
@@ -730,6 +741,12 @@ const dictionary: Record<Locale, Dictionary> = {
       openNow: "Abierto ahora",
       closedNow: "Cerrado ahora",
       close: "Cerrar",
+      partnerAd: {
+        eyebrow: "De nuestros socios",
+        message: "¿Tienes artículos de herencia, joyas, oro o plata para vender?",
+        name: "Naples Estate Jewelry",
+        cta: "Visitar sitio web",
+      },
       pageComingSoon: "Esta página estará disponible próximamente — vuelve pronto.",
       days: {
         mon: "Lunes",
@@ -823,13 +840,6 @@ const dictionary: Record<Locale, Dictionary> = {
       callPhone: (phone: string) => `Llamar ${phone}`,
       emailUs: "Envíanos un correo",
     },
-    order: {
-      onlineOrdering: "Pedidos en Línea",
-      comingSoon: "Próximamente",
-      body: "Estamos preparando los pedidos en línea para que puedas disfrutar tus favoritos sin esperar. Todavía no está listo — mientras tanto, hacer tu pedido está a solo una llamada (o una visita rápida) de distancia.",
-      browseTheMenu: "Ver el Menú",
-      orderInPerson: (address: string) => `¿Prefieres pedir en persona? Estamos en ${address}.`,
-    },
     emailFax: {
       nameLabel: "Nombre del negocio o local",
       nameHint: "Si es solo para ti, basta con tu nombre.",
@@ -882,7 +892,7 @@ const dictionary: Record<Locale, Dictionary> = {
         emailFaxList: "Lista de fax/correo",
         settings: "Configuración",
         signOut: "Cerrar sesión",
-        viewPublicSite: "Ver sitio público",
+        viewPublicSite: "Volver al sitio principal",
       },
       aiAlert: {
         blocked:
@@ -1042,12 +1052,20 @@ const dictionary: Record<Locale, Dictionary> = {
           cancelSchedule: "Cancelar programación",
           publishNow: "Aprobar y publicar ahora",
           publishing: "Publicando…",
+          scheduleFor: "Fecha y hora de publicación",
           schedule: "Programar",
           saveBeforePublish: "Guarda y renderiza tus cambios antes de publicar.",
           saveToCameraRoll: "Guardar en el carrete",
           saveImage: "Guardar imagen",
           savingImage: "Preparando imagen…",
           saveImageError: "No se pudo guardar la imagen. Inténtalo de nuevo.",
+          discardAndStartOver: "Descartar y empezar de nuevo",
+          discardConfirmTitle: "¿Descartar este borrador?",
+          discardConfirmBody: "Esto elimina permanentemente este borrador y sus imágenes guardadas. No se puede deshacer.",
+          cancelDiscard: "Conservar este borrador",
+          confirmDiscard: "Descartar y empezar de nuevo",
+          discarding: "Descartando…",
+          errorDiscard: "No se pudo descartar este borrador.",
         },
       },
     },

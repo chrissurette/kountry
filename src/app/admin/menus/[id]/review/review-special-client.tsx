@@ -2,13 +2,14 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { renderSpecialMenuSvg } from "@/lib/menu/render-special-menu-svg";
 import { MENU_THEMES, getMenuTheme } from "@/lib/menu/special-menu-themes";
 import { hasMeaningfulContent, type DailySpecialMenu } from "@/lib/menu/special-menu-schema";
 import { canShareImageFiles, saveSpecialImage, specialImageFilename } from "@/lib/menu/save-special-image";
 import { composeSocialImages } from "@/lib/social/compose-social-images";
 import { createClient } from "@/lib/supabase/client";
-import type { PublishSchedule } from "@/types/database";
+import type { MenuStatus, PublishSchedule } from "@/types/database";
 import type { Locale } from "@/lib/i18n/locale";
 import { getDictionary, type Dictionary } from "@/lib/i18n/dictionary";
 
@@ -124,6 +125,7 @@ export function ReviewSpecialClient({
   initialSpecialEs,
   initialImageUrlEs,
   pendingSchedule,
+  initialMenuStatus,
   locale,
 }: {
   menuId: string;
@@ -133,8 +135,10 @@ export function ReviewSpecialClient({
   initialSpecialEs: DailySpecialMenu | null;
   initialImageUrlEs: string | null;
   pendingSchedule: PublishSchedule | null;
+  initialMenuStatus: MenuStatus;
   locale: Locale;
 }) {
+  const router = useRouter();
   const t = getDictionary(locale).admin.review;
   const [special, setSpecial] = useState<DailySpecialMenu | null>(initialSpecial);
   const [themeId, setThemeId] = useState(initialThemeId);
@@ -143,8 +147,11 @@ export function ReviewSpecialClient({
   const [rendering, setRendering] = useState(false);
   const [scheduleAt, setScheduleAt] = useState("");
   const [schedule, setSchedule] = useState(pendingSchedule);
+  const [menuStatus, setMenuStatus] = useState(initialMenuStatus);
   const [status, setStatus] = useState<"idle" | "busy" | "published" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [discardConfirming, setDiscardConfirming] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
 
   // Spanish translation (docs/08): a full parallel DailySpecialMenu, rendered
   // with the same theme as a second image. Null until the owner translates.
@@ -411,6 +418,7 @@ export function ReviewSpecialClient({
         const b = await res.json().catch(() => ({}));
         throw new Error(b.error ?? t.errorPublish);
       }
+      setMenuStatus("published");
       setStatus("published");
     } catch (err) {
       setStatus("error");
@@ -435,6 +443,7 @@ export function ReviewSpecialClient({
       }
       const { schedule: created } = await res.json();
       setSchedule(created);
+      setMenuStatus("scheduled");
       setStatus("idle");
     } catch (err) {
       setStatus("error");
@@ -448,6 +457,25 @@ export function ReviewSpecialClient({
     await fetch(`/api/schedules/${schedule.id}`, { method: "DELETE" });
     setSchedule(null);
     setStatus("idle");
+  }
+
+  async function discardAndStartOver() {
+    setDiscarding(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/menus/${menuId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? t.publishBar.errorDiscard);
+      }
+      router.replace("/admin/menus/new");
+      router.refresh();
+    } catch (err) {
+      setDiscarding(false);
+      setDiscardConfirming(false);
+      setStatus("error");
+      setMessage(err instanceof Error ? err.message : t.publishBar.errorDiscard);
+    }
   }
 
   if (status === "published") {
@@ -481,6 +509,12 @@ export function ReviewSpecialClient({
           onPublish={publishNow}
           onSchedule={schedulePublish}
           onCancelSchedule={cancelSchedule}
+          canDiscard={menuStatus === "draft"}
+          discardConfirming={discardConfirming}
+          discarding={discarding}
+          onRequestDiscard={() => setDiscardConfirming(true)}
+          onCancelDiscard={() => setDiscardConfirming(false)}
+          onConfirmDiscard={discardAndStartOver}
           t={t.publishBar}
         />
         {message && <p role="alert" className="text-sm text-red-700">{message}</p>}
@@ -567,6 +601,12 @@ export function ReviewSpecialClient({
           onPublish={publishNow}
           onSchedule={schedulePublish}
           onCancelSchedule={cancelSchedule}
+          canDiscard={menuStatus === "draft"}
+          discardConfirming={discardConfirming}
+          discarding={discarding}
+          onRequestDiscard={() => setDiscardConfirming(true)}
+          onCancelDiscard={() => setDiscardConfirming(false)}
+          onConfirmDiscard={discardAndStartOver}
           onSaveImage={saveImageToDevice}
           savingImage={savingImage}
           canShareFiles={canShareFiles}
@@ -893,6 +933,12 @@ function PublishBar({
   onPublish,
   onSchedule,
   onCancelSchedule,
+  canDiscard,
+  discardConfirming,
+  discarding,
+  onRequestDiscard,
+  onCancelDiscard,
+  onConfirmDiscard,
   onSaveImage,
   savingImage,
   canShareFiles,
@@ -908,6 +954,12 @@ function PublishBar({
   onPublish: () => void;
   onSchedule: () => void;
   onCancelSchedule: () => void;
+  canDiscard: boolean;
+  discardConfirming: boolean;
+  discarding: boolean;
+  onRequestDiscard: () => void;
+  onCancelDiscard: () => void;
+  onConfirmDiscard: () => void;
   /** Omitted by the legacy image-gen path, which has no client-rendered SVG to rasterize — no button renders there. */
   onSaveImage?: (which: Locale) => void;
   savingImage?: Locale | null;
@@ -968,12 +1020,56 @@ function PublishBar({
               : `${canShareFiles ? t.saveToCameraRoll : t.saveImage} (ES)`}
           </button>
         )}
-        <input type="datetime-local" value={scheduleAt} onChange={(e) => setScheduleAt(e.target.value)} className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm" />
+        <label htmlFor="schedule-publish-at" className="sr-only">
+          {t.scheduleFor}
+        </label>
+        <input
+          id="schedule-publish-at"
+          name="scheduleAt"
+          type="datetime-local"
+          value={scheduleAt}
+          onInput={(e) => setScheduleAt(e.currentTarget.value)}
+          className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm"
+        />
         <button type="button" onClick={onSchedule} disabled={status === "busy" || !canPublish || !scheduleAt} className="rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium disabled:opacity-50">
           {t.schedule}
         </button>
+        {canDiscard && (
+          <button
+            type="button"
+            onClick={onRequestDiscard}
+            disabled={discarding}
+            className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
+          >
+            {t.discardAndStartOver}
+          </button>
+        )}
       </div>
       {dirty && <p className="text-xs text-neutral-500">{t.saveBeforePublish}</p>}
+      {canDiscard && discardConfirming && (
+        <div role="alertdialog" aria-labelledby="discard-draft-title" aria-describedby="discard-draft-description" className="mt-1 rounded-lg border border-red-300 bg-red-50 p-3">
+          <p id="discard-draft-title" className="text-sm font-semibold text-red-900">{t.discardConfirmTitle}</p>
+          <p id="discard-draft-description" className="mt-1 text-sm text-red-800">{t.discardConfirmBody}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onCancelDiscard}
+              disabled={discarding}
+              className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-800 disabled:opacity-50"
+            >
+              {t.cancelDiscard}
+            </button>
+            <button
+              type="button"
+              onClick={onConfirmDiscard}
+              disabled={discarding}
+              className="rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {discarding ? t.discarding : t.confirmDiscard}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

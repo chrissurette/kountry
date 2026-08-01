@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getMenuWithContent, deleteMenu } from "@/lib/menu/service";
+import { getMenuWithContent, deleteMenu, MenuDeleteBlockedError } from "@/lib/menu/service";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +19,10 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   try {
     await deleteMenu(supabase, id);
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    if (error instanceof MenuDeleteBlockedError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
     return NextResponse.json({ error: "Failed to delete menu." }, { status: 500 });
   }
 }

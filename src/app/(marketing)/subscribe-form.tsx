@@ -5,6 +5,9 @@ import type { Locale } from "@/lib/i18n/locale";
 import { getDictionary } from "@/lib/i18n/dictionary";
 
 type Status = "idle" | "submitting" | "success" | "error";
+type FormError =
+  | { kind: "validation" | "rateLimited" | "generic" }
+  | { kind: "server"; message: string };
 
 /**
  * Homepage mailing-list signup — email and/or phone, posts to
@@ -21,17 +24,28 @@ export function SubscribeForm({ restaurantSlug, locale }: { restaurantSlug: stri
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
   const [status, setStatus] = useState<Status>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormError | null>(null);
+
+  const errorMessage =
+    formError?.kind === "validation"
+      ? t.validationError
+      : formError?.kind === "rateLimited"
+        ? t.rateLimited
+        : formError?.kind === "generic"
+          ? t.error
+          : formError?.kind === "server"
+            ? formError.message
+            : null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!email.trim() && !phone.trim()) {
       setStatus("error");
-      setErrorMessage(t.validationError);
+      setFormError({ kind: "validation" });
       return;
     }
     setStatus("submitting");
-    setErrorMessage(null);
+    setFormError(null);
     try {
       const res = await fetch(`/api/public/${restaurantSlug}/subscribe`, {
         method: "POST",
@@ -45,7 +59,13 @@ export function SubscribeForm({ restaurantSlug, locale }: { restaurantSlug: stri
         // English-only (the established scope for API-origin errors), but
         // rate limiting is the one failure a real ES visitor could plausibly
         // hit, so the client maps the status itself.
-        setErrorMessage(res.status === 429 ? t.rateLimited : (data?.error ?? t.error));
+        setFormError(
+          res.status === 429
+            ? { kind: "rateLimited" }
+            : data?.error
+              ? { kind: "server", message: data.error }
+              : { kind: "generic" },
+        );
         return;
       }
       // One outcome on purpose — the API no longer tells us (or anyone) whether
@@ -56,7 +76,7 @@ export function SubscribeForm({ restaurantSlug, locale }: { restaurantSlug: stri
       setPhone("");
     } catch {
       setStatus("error");
-      setErrorMessage(t.error);
+      setFormError({ kind: "generic" });
     }
   }
 

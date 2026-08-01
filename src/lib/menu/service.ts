@@ -5,6 +5,13 @@ export interface MenuWithContent extends Menu {
   menu_sections: (MenuSection & { menu_items: MenuItem[] })[];
 }
 
+export class MenuDeleteBlockedError extends Error {
+  constructor() {
+    super("Published or scheduled specials are kept in History and cannot be deleted.");
+    this.name = "MenuDeleteBlockedError";
+  }
+}
+
 export async function getMenuWithContent(supabase: SupabaseClient, menuId: string): Promise<MenuWithContent> {
   const { data, error } = await supabase
     .from("menus")
@@ -18,12 +25,37 @@ export async function getMenuWithContent(supabase: SupabaseClient, menuId: strin
 }
 
 export async function deleteMenu(supabase: SupabaseClient, menuId: string): Promise<void> {
-  // Remove the rendered artifact from Storage first so deleting a saved
-  // special (Library) doesn't orphan its .svg in the site-media bucket.
-  const { data: existing } = await supabase.from("menus").select("generated_image_path").eq("id", menuId).maybeSingle();
-  const path = (existing as Pick<Menu, "generated_image_path"> | null)?.generated_image_path;
-  if (path) await supabase.storage.from("site-media").remove([path]);
+  const { data: existing, error: readError } = await supabase
+    .from("menus")
+    .select("status, generated_image_path, generated_image_path_es, social_image_path, social_image_ig_path")
+    .eq("id", menuId)
+    .maybeSingle();
+  if (readError) throw readError;
+  if (!existing) throw new Error("Menu not found.");
+
+  // Published snapshots are immutable and keep pointing at these rendered
+  // files forever. Removing one would break History and, for the live
+  // snapshot, the public site. Only unpublished drafts are disposable.
+  const { data: snapshot, error: snapshotError } = await supabase
+    .from("published_snapshots")
+    .select("id")
+    .eq("menu_id", menuId)
+    .limit(1)
+    .maybeSingle();
+  if (snapshotError) throw snapshotError;
+  if (existing.status !== "draft" || snapshot) throw new MenuDeleteBlockedError();
+
+  const paths = [
+    existing.generated_image_path,
+    existing.generated_image_path_es,
+    existing.social_image_path,
+    existing.social_image_ig_path,
+  ].filter((path): path is string => Boolean(path));
 
   const { error } = await supabase.from("menus").delete().eq("id", menuId);
   if (error) throw error;
+
+  // Delete the database row first. If Storage cleanup ever fails, the safe
+  // failure is an orphaned draft file—not a menu row whose file vanished.
+  if (paths.length > 0) await supabase.storage.from("site-media").remove(paths);
 }

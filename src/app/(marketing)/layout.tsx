@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Fraunces } from "next/font/google";
+import { Fraunces, Montserrat } from "next/font/google";
 import { getSiteRestaurant } from "@/lib/site/restaurant";
 import { siteStyleVars } from "@/lib/site/theme";
 import { socialLinks, directionsUrl } from "@/lib/site/social";
@@ -17,14 +18,23 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
+// Geometric sans used only for the compact header wordmark so its letterforms
+// echo the restaurant's supplied logo without turning the logo itself into a
+// tiny, unreadable image in the navigation bar.
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: "500",
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
 // One array drives BOTH the header (SiteNav) and the footer nav below —
 // adding a page here puts it in both, which is the intent. Jobs and
-// Email/Fax List sit last as secondary/utility pages, after the six that
+// Email/Fax List sit last as secondary/utility pages, after the five that
 // speak to someone deciding where to eat.
 function navLinks(t: ReturnType<typeof getDictionary>["nav"]): NavLink[] {
   return [
     { href: "/menu", label: t.menu },
-    { href: "/order", label: t.order },
     { href: "/about", label: t.about },
     { href: "/visit", label: t.visit },
     { href: "/gallery", label: t.gallery },
@@ -64,7 +74,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
 
   return (
     <div
-      className={`${fraunces.variable} font-site-body flex min-h-dvh flex-col`}
+      className={`${fraunces.variable} ${montserrat.variable} font-site-body flex min-h-dvh flex-col`}
       style={{ ...(style as CSSProperties), background: "var(--site-bg)", color: "var(--site-text)" }}
     >
       <SiteNav name={name} links={links} phone={restaurant?.phone} locale={locale} />
@@ -72,15 +82,11 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <div className="flex-1">{children}</div>
 
       <footer className="mt-16 border-t" style={{ borderColor: "var(--site-border)" }}>
-        {/* Below lg: unchanged 3-column stack (nav links and the legal line
-            each need their own vertical stack to stay readable at that
-            width). At lg+ there's ample horizontal room, so the 6 nav links
-            and the copyright/legal/admin line each collapse onto one row
-            instead of stacking 6-high and 3-high — the footer's height was
-            being driven entirely by those two stacks, not by the (already
-            compact) brand column. lg:items-center vertically centers the
-            now-similar-height columns instead of top-aligning them. */}
-        <div className="grid gap-8 px-6 py-12 sm:grid-cols-3 sm:px-8 lg:items-center lg:py-8">
+        {/* Below sm the three footer sections stack; the page links themselves
+            use a compact two-column grid. At sm+ the sections become three
+            columns and the nav returns to its centered wrapping row. At lg+
+            the copyright/legal/admin line also collapses onto one row. */}
+        <div className="grid gap-8 px-6 py-12 text-center sm:grid-cols-3 sm:px-8 sm:text-left lg:items-center lg:py-8">
           <div>
             <p className="font-site-heading text-lg font-semibold" style={{ color: "var(--site-primary)" }}>
               {name}
@@ -90,30 +96,41 @@ export default async function MarketingLayout({ children }: { children: React.Re
                 href={directionsUrl(restaurant.address)}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 block text-sm hover:underline"
+                className="footer-sweep-link mx-auto mt-2 block text-sm sm:mx-0"
                 style={{ color: "var(--site-muted)" }}
               >
                 {restaurant.address}
               </a>
             )}
             {restaurant?.phone && (
-              <a href={`tel:${restaurant.phone}`} className="mt-1 block text-sm hover:underline" style={{ color: "var(--site-muted)" }}>
+              <a
+                href={`tel:${restaurant.phone}`}
+                className="footer-sweep-link mx-auto mt-1 block text-sm sm:mx-0"
+                style={{ color: "var(--site-muted)" }}
+              >
                 {restaurant.phone}
               </a>
             )}
           </div>
 
-          <nav className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-5 sm:gap-y-1">
-            {links.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:underline" style={{ color: "var(--site-text)" }}>
+          {/* On phones, the final utility link spans both columns so its
+              longer Spanish label remains on one line at 280px. */}
+          <nav className="grid grid-cols-2 justify-items-center gap-x-6 gap-y-2 text-sm sm:flex sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-5 sm:gap-y-1">
+            {links.map((l, index) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={`footer-sweep-link ${index === links.length - 1 ? "col-span-2 justify-self-center sm:col-span-1 sm:justify-self-auto" : ""}`}
+                style={{ color: "var(--site-text)" }}
+              >
                 {l.label}
               </Link>
             ))}
           </nav>
 
-          <div className="sm:text-right">
+          <div className="text-center sm:text-right">
             {socials.length > 0 && (
-              <div className="flex gap-3 sm:justify-end">
+              <div className="flex justify-center gap-3 sm:justify-end">
                 {socials.map((s) => (
                   <a
                     key={s.key}
@@ -131,22 +148,91 @@ export default async function MarketingLayout({ children }: { children: React.Re
                 ))}
               </div>
             )}
-            <div className="mt-4 flex flex-col gap-1 text-xs sm:mt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-3">
+            <div className="mt-4 flex flex-col items-center gap-1 text-xs sm:mt-3 sm:flex-row sm:flex-wrap sm:justify-end sm:gap-3">
               <p style={{ color: "var(--site-muted)" }}>© {name}</p>
               <div className="flex gap-3">
-                <Link href="/privacy" className="hover:underline" style={{ color: "var(--site-muted)" }}>
+                <Link href="/privacy" className="footer-sweep-link" style={{ color: "var(--site-muted)" }}>
                   {t.nav.privacy}
                 </Link>
-                <Link href="/terms" className="hover:underline" style={{ color: "var(--site-muted)" }}>
+                <Link href="/terms" className="footer-sweep-link" style={{ color: "var(--site-muted)" }}>
                   {t.nav.terms}
                 </Link>
               </div>
-              <Link href="/admin" className="hover:underline" style={{ color: "var(--site-muted)" }}>
+              <Link href="/admin" className="footer-sweep-link" style={{ color: "var(--site-muted)" }}>
                 {t.nav.staffSignIn}
               </Link>
             </div>
           </div>
         </div>
+
+        <div className="border-t" style={{ borderColor: "var(--site-border)" }}>
+          <a
+            href="https://naplesestatejewelry.co"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative isolate block h-[90px] overflow-hidden bg-[#07100d] focus-visible:outline-2 focus-visible:outline-offset-[-4px]"
+            style={{ outlineColor: "var(--site-accent)" }}
+          >
+            <Image
+              src="/partners/naples-estate-jewelry-banner.png"
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover object-[68%_center] opacity-75 transition-transform duration-700 ease-out group-hover:scale-[1.025] sm:object-center sm:opacity-85"
+            />
+            <span
+              aria-hidden="true"
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(4, 12, 9, 0.98) 0%, rgba(4, 12, 9, 0.9) 38%, rgba(4, 12, 9, 0.42) 70%, rgba(4, 12, 9, 0.16) 100%)",
+              }}
+            />
+            <span
+              aria-hidden="true"
+              className="absolute inset-2 border border-white/20"
+              style={{ boxShadow: "inset 0 0 0 1px rgba(212, 175, 55, 0.16)" }}
+            />
+
+            <span className="relative z-10 mx-auto flex h-[90px] max-w-7xl items-center justify-center px-4 sm:px-10 lg:px-16">
+              <span className="flex w-full max-w-full items-center justify-center text-center text-white sm:w-auto sm:gap-8 sm:text-left">
+                <span className="min-w-0">
+                  <span className="mb-1 hidden items-center gap-2 text-[0.58rem] font-semibold uppercase tracking-[0.2em] text-[#e7c871] sm:flex">
+                    <span aria-hidden="true" className="h-px w-6 bg-[#e7c871]/60" />
+                    {t.common.partnerAd.eyebrow}
+                  </span>
+                  <span className="font-site-heading block whitespace-nowrap text-lg font-semibold leading-tight tracking-tight text-white sm:text-xl">
+                    {t.common.partnerAd.name}
+                  </span>
+                  <span className="mt-0.5 block whitespace-nowrap text-[clamp(0.48rem,2.8vw,0.68rem)] leading-snug text-white/75 sm:text-xs">
+                    {t.common.partnerAd.message}
+                  </span>
+                </span>
+                <span className="hidden shrink-0 items-center gap-2 border-b border-[#e7c871]/45 pb-0.5 text-sm font-medium text-[#f2dda0] transition-colors group-hover:border-[#e7c871] group-hover:text-white sm:inline-flex">
+                  <span className="hidden sm:inline">{t.common.partnerAd.cta}</span>
+                  <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">
+                    ↗
+                  </span>
+                </span>
+              </span>
+            </span>
+          </a>
+        </div>
+
+        <a
+          href="https://surettesystems.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-6 items-center justify-center whitespace-nowrap border-t px-3 text-[10px] leading-none tracking-[0.04em] transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-[-2px]"
+          style={{
+            background: "var(--site-bg)",
+            borderColor: "var(--site-border)",
+            color: "var(--site-muted)",
+            outlineColor: "var(--site-accent)",
+          }}
+        >
+          This website built by Surette Systems
+        </a>
       </footer>
     </div>
   );

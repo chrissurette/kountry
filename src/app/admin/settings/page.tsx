@@ -38,8 +38,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     <div className="mx-auto max-w-2xl">
       <h1 className="mb-1 text-xl font-semibold">Settings</h1>
       <p className="mb-6 text-sm text-neutral-500">
-        Everything here feeds your public site, Daily Specials, and Main Menu — nothing about your
-        restaurant is hardcoded in the app.
+        Update the restaurant details used across your public site, Daily Specials, and Main Menu.
       </p>
       <SettingsForm restaurant={restaurant} />
       <div className="mt-6">

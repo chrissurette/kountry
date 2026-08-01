@@ -9,7 +9,7 @@ Originally this was a standalone menu tool that published to the owner's *separa
 ```
 Owner's phone (PWA, at /admin)              Public website (this app, at /)
    │ photo upload (signed URL)                 │ Home · Menu · About · Visit ·
-   ▼                                           │ Gallery · Catering · Order
+   ▼                                           │ Gallery · Catering
 ┌─────────────────────────────────────────────────────────────┐
 │  Netlify (Next.js — one repo, one deploy, zero-config)      │
 │  ├─ Public marketing site — profile- and snapshot-driven,   │

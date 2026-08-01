@@ -45,7 +45,7 @@ theme picker for Daily Specials did not.
 - This app is the restaurant's entire public website, not a tool paired with
   a widget on a separate site — see [CLAUDE.md](CLAUDE.md)'s "Architecture
   pivot" note. The staff tool lives at `/admin`; the public site (Home, Menu,
-  About, Visit, Gallery, Catering, Order) lives at the root, fully
+  About, Visit, Gallery, and Catering) lives at the root, fully
   profile-driven, with its own warm design system (`src/lib/site/`)
 - **Daily Specials is AI-image-based**, not OCR-to-text: capture a photo of
   the handwritten board → OpenAI `gpt-image-1` generates a styled image of it

@@ -24,6 +24,8 @@ export function buildMenuSnapshotPayload(
   /** Social crosspost JPEGs (docs/10), frozen in here so a *scheduled* publish posts exactly what was approved — the cron has no browser to re-compose them at fire time. */
   socialImages?: { imageUrl?: string | null; imageIgUrl?: string | null }
 ): MenuSnapshotPayload {
+  const specialDateText = (menu.special_data as { menu?: { dateText?: string | null } } | null)?.menu?.dateText?.trim();
+
   return {
     restaurant: {
       slug: restaurant.slug,
@@ -37,7 +39,10 @@ export function buildMenuSnapshotPayload(
       menu_defaults: restaurant.menu_defaults,
     },
     menu: {
-      title: menu.title,
+      // Structured Daily Specials generally have no legacy `menus.title`.
+      // Freeze their board date into the snapshot so History has a useful,
+      // immutable label instead of showing every publication as untitled.
+      title: menu.title?.trim() || specialDateText || null,
       service_date: menu.service_date,
       sections: menu.menu_sections.map((section) => ({
         name: section.name,
