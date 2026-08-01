@@ -29,6 +29,11 @@
 # first created.
 [build.environment]
   NODE_VERSION = "24"
+  # This is a public restaurant identifier, not a credential. Its value is
+  # intentionally present in public asset names/URLs, so Netlify's literal
+  # value scanner otherwise reports false positives. Keep scanning enabled for
+  # every real secret and omit only this configuration key.
+  SECRETS_SCAN_OMIT_KEYS = "SITE_RESTAURANT_SLUG"
 
 [functions]
   directory = "netlify/functions"
